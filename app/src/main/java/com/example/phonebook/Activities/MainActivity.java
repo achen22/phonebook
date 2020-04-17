@@ -1,7 +1,9 @@
 package com.example.phonebook.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityOptionsCompat;
 
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -58,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
     private void startWelcomeActivityOnFirstRun() {
         // TODO: check if this is the first time the app has been opened
         Intent intent = new Intent(this, WelcomeActivity.class);
-        startActivity(intent);
+        ActivityOptionsCompat options = ActivityOptionsCompat.makeCustomAnimation(
+                getApplicationContext(), R.anim.slide_in_left, R.anim.slide_out_right);
+        startActivity(intent, options.toBundle());
     }
 }
