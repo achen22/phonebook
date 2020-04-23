@@ -4,4 +4,7 @@
     <string name="welcome_text">Swipe left to continue</string>
     <string name="dark_btn">Dark</string>
     <string name="light_btn">Light</string>
+    <string name="edit_page_title">Edit Phonebook Entry</string>
+    <string name="add_page_title">New Phonebook Entry</string>
+    <string name="detail_page_title">Phonebook Entry Details</string>
 </resources>

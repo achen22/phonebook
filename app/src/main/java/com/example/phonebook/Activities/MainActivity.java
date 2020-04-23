@@ -1,10 +1,11 @@
 package com.example.phonebook.Activities;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityOptionsCompat;
+import androidx.appcompat.widget.Toolbar;
 
-import android.app.ActivityOptions;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 
@@ -16,11 +17,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        startWelcomeActivityOnFirstRun();
+        setThemeFromSharedPrefs();
         setContentView(R.layout.activity_main);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(TAG);
-        }
+        setSupportActionBar((Toolbar) findViewById(R.id.appbar_main));
 
         // TODO: link to appropriate floating action button
         View addBtn = findViewById(R.id.btn_add);
@@ -57,11 +56,23 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void startWelcomeActivityOnFirstRun() {
-        // TODO: check if this is the first time the app has been opened
-        Intent intent = new Intent(this, WelcomeActivity.class);
-        ActivityOptionsCompat options = ActivityOptionsCompat.makeCustomAnimation(
-                getApplicationContext(), R.anim.slide_in_left, R.anim.slide_out_right);
-        startActivity(intent, options.toBundle());
+    private void setThemeFromSharedPrefs() {
+        SharedPreferences preferences = getSharedPreferences(
+                getApplicationContext().getPackageName(), MODE_PRIVATE);
+        if (preferences.contains(WelcomeActivity.DARK_THEME_KEY)) {
+            applyTheme(preferences);
+            Intent intent = new Intent(this, WelcomeActivity.class);
+            startActivity(intent);
+        } else {
+            Intent intent = new Intent(this, WelcomeActivity.class);
+            startActivity(intent);
+        }
+    }
+
+    private void applyTheme(@NonNull SharedPreferences preferences) {
+        int styleId = preferences.getBoolean(WelcomeActivity.DARK_THEME_KEY, false)
+                ? R.style.DarkTheme
+                : R.style.AppTheme;
+        setTheme(styleId);
     }
 }

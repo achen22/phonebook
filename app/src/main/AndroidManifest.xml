@@ -9,9 +9,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Activities.DetailActivity"></activity>
-        <activity android:name=".Activities.EditActivity" />
-        <activity android:name=".Activities.AddActivity" />
+
+        <activity
+            android:name=".Activities.DetailActivity"
+            android:label="@string/detail_page_title" />
+        <activity
+            android:name=".Activities.EditActivity"
+            android:label="@string/edit_page_title" />
+        <activity
+            android:name=".Activities.AddActivity"
+            android:label="@string/add_page_title" />
         <activity android:name=".Activities.WelcomeActivity" />
         <activity android:name=".Activities.MainActivity">
             <intent-filter>
