@@ -1,40 +1,48 @@
 package com.example.phonebook.Activities;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+import android.view.View;
 
 import com.example.phonebook.R;
 
-public class AddActivity extends AppCompatActivity {
-    private final String TAG = this.getClass().getSimpleName();
-
+public class AddActivity extends BaseChildActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences preferences = getSharedPreferences(
-                getApplicationContext().getPackageName(), MODE_PRIVATE);
-        applyTheme(preferences);
-        setContentView(R.layout.activity_add);
-        setSupportActionBar((Toolbar) findViewById(R.id.appbar_add));
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-    }
+        setChildView(R.layout.activity_add);
 
-    private void applyTheme(@NonNull SharedPreferences preferences) {
-        int styleId = preferences.getBoolean(WelcomeActivity.DARK_THEME_KEY, false)
-                ? R.style.DarkTheme
-                : R.style.AppTheme;
-        setTheme(styleId);
-    }
+//        TextInputLayout dobField = findViewById(R.id.add_dob_field);
+//        dobField.getEditText().setOnFocusChangeListener(new View.OnFocusChangeListener() {
+//            @Override
+//            public void onFocusChange(final View view, boolean hasFocus) {
+//                if (hasFocus) {
+//                    Calendar calendar = Calendar.getInstance();
+//                    DatePickerDialog dialog = new DatePickerDialog(view.getContext(),
+//                            new DatePickerDialog.OnDateSetListener() {
+//                                @Override
+//                                public void onDateSet(
+//                                        DatePicker datePicker, int year, int month, int day) {
+//                                    Calendar date = Calendar.getInstance();
+//                                    date.set(year, month, day);
+//                                    DateFormat format = SimpleDateFormat.getDateInstance();
+//                                    ((EditText) view).setText(format.format(date.getTime()));
+//                                }
+//                            },
+//                            calendar.get(Calendar.YEAR),
+//                            calendar.get(Calendar.MONTH),
+//                            calendar.get(Calendar.DAY_OF_MONTH));
+//                    dialog.show();
+//                }
+//            }
+//        });
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        finish();
-        return true;
+        View btnAdd = findViewById(R.id.add_layout_btn);
+        btnAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // TODO: add to database
+                finish();
+            }
+        });
     }
 }

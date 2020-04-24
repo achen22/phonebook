@@ -1,18 +1,19 @@
 package com.example.phonebook.Activities;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
 import com.example.phonebook.R;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = this.getClass().getSimpleName();
+    private boolean useDarkTheme;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,13 +57,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        SharedPreferences preferences = getSharedPreferences(
+                getApplicationContext().getPackageName(), MODE_PRIVATE);
+        if (preferences.getBoolean(WelcomeActivity.DARK_THEME_KEY, false) != useDarkTheme) {
+            recreate();
+        }
+        super.onResume();
+    }
+
     private void setThemeFromSharedPrefs() {
         SharedPreferences preferences = getSharedPreferences(
                 getApplicationContext().getPackageName(), MODE_PRIVATE);
         if (preferences.contains(WelcomeActivity.DARK_THEME_KEY)) {
             applyTheme(preferences);
-            Intent intent = new Intent(this, WelcomeActivity.class);
-            startActivity(intent);
         } else {
             Intent intent = new Intent(this, WelcomeActivity.class);
             startActivity(intent);
@@ -70,9 +79,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void applyTheme(@NonNull SharedPreferences preferences) {
-        int styleId = preferences.getBoolean(WelcomeActivity.DARK_THEME_KEY, false)
-                ? R.style.DarkTheme
-                : R.style.AppTheme;
-        setTheme(styleId);
+        useDarkTheme = preferences.getBoolean(WelcomeActivity.DARK_THEME_KEY, false);
+        setTheme(useDarkTheme ? R.style.DarkTheme : R.style.AppTheme);
     }
 }

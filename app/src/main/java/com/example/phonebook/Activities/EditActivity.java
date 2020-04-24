@@ -1,20 +1,23 @@
 package com.example.phonebook.Activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
+import android.view.View;
 
 import com.example.phonebook.R;
 
-public class EditActivity extends AppCompatActivity {
-    private final String TAG = getClass().getSimpleName();
-
+public class EditActivity extends BaseChildActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(TAG);
-        }
+        setChildView(R.layout.activity_edit);
+
+        View btnEdit = findViewById(R.id.edit_layout_btn);
+        btnEdit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // TODO: update database
+                finish();
+            }
+        });
     }
 }

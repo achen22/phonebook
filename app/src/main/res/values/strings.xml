@@ -7,4 +7,11 @@
     <string name="edit_page_title">Edit Phonebook Entry</string>
     <string name="add_page_title">New Phonebook Entry</string>
     <string name="detail_page_title">Phonebook Entry Details</string>
+    <string name="name_field">Name</string>
+    <string name="email_field">Email</string>
+    <string name="phone_field">Phone</string>
+    <string name="dob_field">Date of birth</string>
+    <string name="add_page_btn">Add</string>
+    <string name="edit_page_btn">Update</string>
+    <string name="detail_page_btn">Back</string>
 </resources>
