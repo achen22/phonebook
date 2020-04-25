@@ -14,4 +14,5 @@
     <string name="add_page_btn">Add</string>
     <string name="edit_page_btn">Update</string>
     <string name="detail_page_btn">Back</string>
+    <string name="empty_field">&lt;empty&gt;</string>
 </resources>

@@ -11,16 +11,16 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".Activities.DetailActivity"
+            android:name=".activities.DetailActivity"
             android:label="@string/detail_page_title" />
         <activity
-            android:name=".Activities.EditActivity"
+            android:name=".activities.EditActivity"
             android:label="@string/edit_page_title" />
         <activity
-            android:name=".Activities.AddActivity"
+            android:name=".activities.AddActivity"
             android:label="@string/add_page_title" />
-        <activity android:name=".Activities.WelcomeActivity" />
-        <activity android:name=".Activities.MainActivity">
+        <activity android:name=".activities.WelcomeActivity" />
+        <activity android:name=".activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

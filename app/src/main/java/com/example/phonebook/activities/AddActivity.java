@@ -1,4 +1,4 @@
-package com.example.phonebook.Activities;
+package com.example.phonebook.activities;
 
 import android.os.Bundle;
 import android.view.View;
