@@ -13,10 +13,9 @@
         android:layout_marginStart="?attr/listPreferredItemPaddingStart"
         android:layout_marginTop="16dp"
         android:contentDescription="@string/name_field"
-        android:tint="?android:attr/textColorPrimary"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_person_black_24dp" />
+        app:srcCompat="@drawable/ic_person" />
 
     <TextView
         android:id="@+id/detail_name_text"
@@ -37,10 +36,9 @@
         android:layout_marginStart="?attr/listPreferredItemPaddingStart"
         android:layout_marginTop="32dp"
         android:contentDescription="@string/email_field"
-        android:tint="?android:attr/textColorPrimary"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/detail_name_icon"
-        app:srcCompat="@drawable/ic_email_black_24dp" />
+        app:srcCompat="@drawable/ic_email" />
 
     <TextView
         android:id="@+id/detail_email_text"
@@ -61,10 +59,9 @@
         android:layout_marginStart="?attr/listPreferredItemPaddingStart"
         android:layout_marginTop="32dp"
         android:contentDescription="@string/phone_field"
-        android:tint="?android:attr/textColorPrimary"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/detail_email_icon"
-        app:srcCompat="@drawable/ic_phone_black_24dp" />
+        app:srcCompat="@drawable/ic_phone" />
 
     <TextView
         android:id="@+id/detail_phone_text"
@@ -85,10 +82,9 @@
         android:layout_marginStart="?attr/listPreferredItemPaddingStart"
         android:layout_marginTop="32dp"
         android:contentDescription="@string/dob_field"
-        android:tint="?android:attr/textColorPrimary"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/detail_phone_icon"
-        app:srcCompat="@drawable/ic_cake_black_24dp" />
+        app:srcCompat="@drawable/ic_cake" />
 
     <TextView
         android:id="@+id/detail_dob_text"

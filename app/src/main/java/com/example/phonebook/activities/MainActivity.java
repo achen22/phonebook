@@ -1,9 +1,17 @@
 package com.example.phonebook.activities;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.TypedArray;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.SearchView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,6 +30,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = this.getClass().getSimpleName();
+    private MenuItem searchMenuItem;
     private boolean useDarkTheme;
 
     @Override
@@ -30,12 +39,16 @@ public class MainActivity extends AppCompatActivity {
         setThemeFromSharedPrefs();
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.appbar_main));
+        setRecyclerView();
+        handleIntent(getIntent());
 
-        RecyclerView recyclerView = findViewById(R.id.list_main);
-        LinearLayoutManager recyclerManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(recyclerManager);
-        recyclerView.addItemDecoration(new DividerItemDecoration(this, recyclerManager.getOrientation()));
-        recyclerView.setAdapter(new MainAdapter(getSampleData()));
+        View searchBtn = findViewById(R.id.fab_search);
+        searchBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                searchMenuItem.expandActionView();
+            }
+        });
 
         View addBtn = findViewById(R.id.fab_add);
         addBtn.setOnClickListener(new View.OnClickListener() {
@@ -48,6 +61,58 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_main, menu);
+        menu.findItem(R.id.action_dark_mode).setChecked(useDarkTheme);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        searchMenuItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) searchMenuItem.getActionView();
+        setSearchViewStyle(searchView);
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setIconifiedByDefault(false);
+
+        // this shows/hides the software keyboard when the search menu is expanded/collapsed
+        searchMenuItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                searchView.onActionViewExpanded();
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                searchView.onActionViewCollapsed();
+                return true;
+            }
+        });
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_dark_mode:
+                searchMenuItem.collapseActionView();
+                item.setChecked(!useDarkTheme);
+                SharedPreferences preferences = getSharedPreferences(
+                        getApplicationContext().getPackageName(), MODE_PRIVATE);
+                preferences.edit()
+                        .putBoolean(WelcomeActivity.DARK_THEME_KEY, !useDarkTheme)
+                        .apply();
+                recreate();
+                break;
+
+            case R.id.action_search:
+                break;
+
+            default:
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
     protected void onResume() {
         SharedPreferences preferences = getSharedPreferences(
                 getApplicationContext().getPackageName(), MODE_PRIVATE);
@@ -55,6 +120,12 @@ public class MainActivity extends AppCompatActivity {
             recreate();
         }
         super.onResume();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent(intent);
     }
 
     private void setThemeFromSharedPrefs() {
@@ -71,6 +142,51 @@ public class MainActivity extends AppCompatActivity {
     private void applyTheme(@NonNull SharedPreferences preferences) {
         useDarkTheme = preferences.getBoolean(WelcomeActivity.DARK_THEME_KEY, false);
         setTheme(useDarkTheme ? R.style.DarkTheme : R.style.AppTheme);
+    }
+
+    private void setRecyclerView() {
+        RecyclerView recyclerView = findViewById(R.id.list_main);
+        LinearLayoutManager recyclerManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(recyclerManager);
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, recyclerManager.getOrientation()));
+        recyclerView.setAdapter(new MainAdapter(getSampleData()));
+    }
+
+    private void handleIntent(Intent intent) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            if (query == null || query.isEmpty()) {
+                searchMenuItem.expandActionView();
+            } else {
+                // TODO: use the query to filter recyclerView items
+            }
+        }
+    }
+
+    private void setSearchViewStyle(SearchView searchView) {
+        // set colors
+        int resId = getResources().getIdentifier("android:id/search_src_text", null, null);
+        EditText text = searchView.findViewById(resId);
+        TypedArray attrs = getTheme().obtainStyledAttributes(new int[] {
+                R.attr.colorOnPrimary, R.attr.hintTextColor
+        });
+
+        int color = attrs.getColor(0, getResources().getColor(
+                R.color.design_default_color_on_primary));
+        text.setTextColor(color);
+        int alpha = (int) (0xFF * (useDarkTheme ? 0.38 : 0.50)); // @dimen/hint_alpha_material_*
+        //int alpha = (int) (0xFF * (useDarkTheme ? 0.54 : 0.70)); // @dimen/hint_pressed_alpha_material_*
+        text.setHintTextColor(alpha * 0x1000000 + color % 0x1000000);
+        attrs.recycle();
+
+        // remove search icon
+        resId = getResources().getIdentifier("android:id/search_mag_icon", null, null);
+        View searchIcon = searchView.findViewById(resId);
+        ((ViewGroup) searchIcon.getParent()).removeView(searchIcon);
+
+        // remove underline
+        resId = getResources().getIdentifier("android:id/search_plate", null, null);
+        searchView.findViewById(resId).setBackground(null);
     }
 
     private List<Contact> getSampleData() {

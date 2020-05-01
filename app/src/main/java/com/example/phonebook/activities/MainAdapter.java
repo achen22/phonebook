@@ -19,15 +19,15 @@ import java.util.List;
 public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder> {
     private List<Contact> contacts;
 
-    public static class MainViewHolder extends RecyclerView.ViewHolder {
+    static class MainViewHolder extends RecyclerView.ViewHolder {
         private CoordinatorLayout layout;
-        public MainViewHolder(CoordinatorLayout itemView) {
+        MainViewHolder(CoordinatorLayout itemView) {
             super(itemView);
             layout = itemView;
         }
     }
 
-    public MainAdapter(List<Contact> contacts) {
+    MainAdapter(List<Contact> contacts) {
         this.contacts = contacts;
     }
 
@@ -36,7 +36,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
     public MainViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         CoordinatorLayout layout = (CoordinatorLayout) inflater
-                .inflate(R.layout.item_contact, parent, false);
+                .inflate(R.layout.list_item_contact, parent, false);
         return new MainViewHolder(layout);
     }
 

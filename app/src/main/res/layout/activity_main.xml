@@ -22,58 +22,393 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/main_index_scroll"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/divider"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/main_index"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp">
+
+                <TextView
+                    android:id="@+id/main_index_other"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="#"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_a"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/main_index_a"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="A"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_b"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_other" />
+                
+                <TextView
+                    android:id="@+id/main_index_b"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="B"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_c"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_a" />
+                
+                <TextView
+                    android:id="@+id/main_index_c"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="C"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_d"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_b" />
+                
+                <TextView
+                    android:id="@+id/main_index_d"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="D"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_e"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_c" />
+                
+                <TextView
+                    android:id="@+id/main_index_e"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="E"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_f"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_d" />
+
+                <TextView
+                    android:id="@+id/main_index_f"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="F"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_g"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_e" />
+
+                <TextView
+                    android:id="@+id/main_index_g"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="G"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_h"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_f" />
+
+                <TextView
+                    android:id="@+id/main_index_h"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="H"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_i"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_g" />
+
+                <TextView
+                    android:id="@+id/main_index_i"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="I"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_j"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_h" />
+
+                <TextView
+                    android:id="@+id/main_index_j"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="J"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_k"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_i" />
+
+                <TextView
+                    android:id="@+id/main_index_k"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="K"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_l"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_j" />
+
+                <TextView
+                    android:id="@+id/main_index_l"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="L"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_m"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_k" />
+
+                <TextView
+                    android:id="@+id/main_index_m"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="M"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_n"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_l" />
+
+                <TextView
+                    android:id="@+id/main_index_n"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="N"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_o"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_m" />
+
+                <TextView
+                    android:id="@+id/main_index_o"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="O"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_p"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_n" />
+
+                <TextView
+                    android:id="@+id/main_index_p"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="P"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_q"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_o" />
+
+                <TextView
+                    android:id="@+id/main_index_q"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Q"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_r"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_p" />
+
+                <TextView
+                    android:id="@+id/main_index_r"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="R"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_s"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_q" />
+
+                <TextView
+                    android:id="@+id/main_index_s"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="S"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_t"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_r" />
+
+                <TextView
+                    android:id="@+id/main_index_t"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="T"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_u"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_s" />
+
+                <TextView
+                    android:id="@+id/main_index_u"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="U"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_v"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_t" />
+
+                <TextView
+                    android:id="@+id/main_index_v"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="V"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_w"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_u" />
+
+                <TextView
+                    android:id="@+id/main_index_w"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="W"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_x"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_v" />
+
+                <TextView
+                    android:id="@+id/main_index_x"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="X"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_y"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_w" />
+
+                <TextView
+                    android:id="@+id/main_index_y"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Y"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toTopOf="@+id/main_index_z"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_x" />
+
+                <TextView
+                    android:id="@+id/main_index_z"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Z"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Overline"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_index_y" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:background="?android:attr/listDivider"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/list_main"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/main_index_scroll"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/list_main"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/divider"
+            app:layout_constraintTop_toTopOf="parent">
+
+        </androidx.recyclerview.widget.RecyclerView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|right"
-        android:layout_margin="8dp"
-        android:orientation="vertical">
+        android:layout_gravity="bottom|end"
+        android:layout_marginTop="?attr/actionBarSize">
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_delete"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            app:srcCompat="@drawable/ic_delete_black_24dp" />
+            android:orientation="vertical">
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_search"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            app:srcCompat="@drawable/ic_search_black_24dp" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                app:srcCompat="@drawable/ic_delete" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_sort_az"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            app:srcCompat="@drawable/ic_sort_alphabetical_ascending" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_search"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                app:srcCompat="@drawable/ic_search" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_sort_za"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            app:srcCompat="@drawable/ic_sort_alphabetical_descending" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_sort_az"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                app:srcCompat="@drawable/ic_sort_alphabetical_ascending" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_add"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            app:srcCompat="@drawable/ic_add_black_24dp" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_sort_za"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                app:srcCompat="@drawable/ic_sort_alphabetical_descending" />
 
-    </LinearLayout>
-
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_add"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                app:srcCompat="@drawable/ic_add" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

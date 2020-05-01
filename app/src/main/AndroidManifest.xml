@@ -20,12 +20,18 @@
             android:name=".activities.AddActivity"
             android:label="@string/add_page_title" />
         <activity android:name=".activities.WelcomeActivity" />
-        <activity android:name=".activities.MainActivity">
+        <activity android:name=".activities.MainActivity" android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.SEARCH" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <meta-data android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+            <meta-data android:name="android.app.default_searchable"
+                android:value=".activities.MainActivity" />
         </activity>
     </application>
 

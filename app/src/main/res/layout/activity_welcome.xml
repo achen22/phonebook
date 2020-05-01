@@ -55,11 +55,10 @@
         android:alpha="0.4"
         android:scaleX="2"
         android:scaleY="2"
-        android:tint="?android:attr/textColorPrimary"
         app:layout_constraintBottom_toBottomOf="@+id/txt_welcome_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/txt_welcome_text"
-        app:srcCompat="@drawable/ic_navigate_next_black_24dp"
+        app:srcCompat="@drawable/ic_navigate"
         tools:ignore="ContentDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

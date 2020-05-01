@@ -85,8 +85,10 @@ public class WelcomeActivity extends AppCompatActivity {
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            if (Math.abs(e1.getX() - e2.getX()) > Math.abs(e1.getY() - e2.getY())) {
-                // Horizontal fling
+            // Check for right-to-left horizontal (+/- 45 degrees) fling
+            if (e1.getX() > e2.getX()
+                    && Math.abs(e1.getX() - e2.getX()) > Math.abs(e1.getY() - e2.getY())) {
+                // Set light theme preference if no theme was chosen
                 if (!preferences.contains(DARK_THEME_KEY)) {
                     preferences.edit()
                             .putBoolean(DARK_THEME_KEY, false)
