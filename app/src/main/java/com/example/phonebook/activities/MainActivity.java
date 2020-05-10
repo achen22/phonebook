@@ -6,16 +6,19 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.os.Bundle;
+import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.SearchView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -41,6 +44,30 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar((Toolbar) findViewById(R.id.appbar_main));
         setRecyclerView();
         handleIntent(getIntent());
+
+        View deleteBtn = findViewById(R.id.fab_delete);
+        deleteBtn.setOnDragListener(new View.OnDragListener() {
+            @Override
+            public boolean onDrag(View v, DragEvent event) {
+                MainAdapter.ItemState state = (MainAdapter.ItemState) event.getLocalState();
+                switch (event.getAction()) {
+                    case DragEvent.ACTION_DRAG_STARTED:
+                        // Scroll to top of NestedScrollView to show this button
+                        ((NestedScrollView) v.getParent().getParent()).smoothScrollTo(0, 0);
+                        break;
+                    case DragEvent.ACTION_DRAG_ENTERED:
+                    case DragEvent.ACTION_DRAG_EXITED:
+                        state.setDeleting(event.getAction() == DragEvent.ACTION_DRAG_ENTERED);
+                        break;
+                    case DragEvent.ACTION_DROP:
+                        state.setDeleting(false);
+                        // TODO: delete from database
+                        Toast.makeText(v.getContext(), Long.toString(state.getId()), Toast.LENGTH_SHORT).show();
+                        break;
+                }
+                return true;
+            }
+        });
 
         View searchBtn = findViewById(R.id.fab_search);
         searchBtn.setOnClickListener(new View.OnClickListener() {
@@ -149,7 +176,15 @@ public class MainActivity extends AppCompatActivity {
         LinearLayoutManager recyclerManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(recyclerManager);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, recyclerManager.getOrientation()));
-        recyclerView.setAdapter(new MainAdapter(getSampleData()));
+        final MainAdapter adapter = new MainAdapter(getSampleData());
+        recyclerView.setAdapter(adapter);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                adapter.animateClose();
+            }
+        });
     }
 
     private void handleIntent(Intent intent) {

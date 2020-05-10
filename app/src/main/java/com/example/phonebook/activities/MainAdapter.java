@@ -1,13 +1,21 @@
 package com.example.phonebook.activities;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.content.Intent;
+import android.graphics.Point;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.phonebook.R;
@@ -18,6 +26,7 @@ import java.util.List;
 
 public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder> {
     private List<Contact> contacts;
+    private View openItem = null;
 
     static class MainViewHolder extends RecyclerView.ViewHolder {
         private CoordinatorLayout layout;
@@ -43,6 +52,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
     @Override
     public void onBindViewHolder(@NonNull MainViewHolder holder, int position) {
         final Contact contact = contacts.get(position);
+        final GestureDetector gestureDetector;
 
         TextView nameText = holder.layout.findViewById(R.id.item_name_text);
         nameText.setText(contact.getName());
@@ -70,13 +80,25 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
         }
 
         View item = holder.layout.findViewById(R.id.main_list_item);
-        item.setOnClickListener(new View.OnClickListener() {
+        gestureDetector = new GestureDetector(item.getContext(), new OnGestureListener(item, contact.getId()));
+        item.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(), DetailActivity.class);
-                // TODO: use the appropriate id
-                intent.putExtra("id", 5);
-                view.getContext().startActivity(intent);
+            public boolean onTouch(View v, MotionEvent event) {
+                boolean down = event.getActionMasked() == MotionEvent.ACTION_DOWN;
+                boolean up = event.getActionMasked() == MotionEvent.ACTION_UP;
+                if (up || down) {
+                    // onTouch should call View#performClick when a click is detected
+                    if (up) {
+                        v.performClick();
+                    }
+
+                    // get material ripples to show properly
+                    v.setPressed(down);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        v.getForeground().setHotspot(event.getX(), event.getY());
+                    }
+                }
+                return gestureDetector.onTouchEvent(event);
             }
         });
 
@@ -85,7 +107,6 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(view.getContext(), EditActivity.class);
-                // TODO: use the appropriate id
                 intent.putExtra("id", contact.getId());
                 view.getContext().startActivity(intent);
             }
@@ -95,5 +116,119 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
     @Override
     public int getItemCount() {
         return contacts.size();
+    }
+
+    private class OnGestureListener extends GestureDetector.SimpleOnGestureListener {
+        private final View view;
+        private final long id;
+
+        OnGestureListener(View view, long id) {
+            this.view = view;
+            this.id = id;
+        }
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return true;
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            Intent intent = new Intent(view.getContext(), DetailActivity.class);
+            view.getContext().startActivity(intent);
+            return true;
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            if (e1.getX() > e2.getX()) {
+                animate(openItem, false);
+                animate(view, true); // right-to-left swipe
+                openItem = view;
+            } else if (view == openItem) {
+                animate(view, false);
+                openItem = null;
+            }
+            return true;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            animate(openItem, false);
+            openItem = null;
+            ItemState state = new ItemState(id, view);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                view.startDragAndDrop(null, state.getShadow(), state, 0);
+            } else {
+                view.startDrag(null, state.getShadow(), state, 0);
+            }
+        }
+
+        public long getId() {
+            return id;
+        }
+    }
+
+    public static class ItemState {
+        private long id;
+        private View view;
+        private ItemShadow shadow;
+        private int bgColor;
+        private int deleteColor;
+
+        ItemState(long id, View view) {
+            this.id = id;
+            this.view = view;
+            shadow = new ItemShadow(view);
+            bgColor = ((ColorDrawable) view.getBackground()).getColor();
+            deleteColor = (bgColor & 0xFF999999) + 0x660000; // 40% red
+        }
+
+        private static class ItemShadow extends View.DragShadowBuilder {
+            public ItemShadow(View view) {
+                // Set the drag shadow to show only the name TextView
+                super(view.findViewById(R.id.item_name_text));
+            }
+
+            @Override
+            public void onProvideShadowMetrics(Point outShadowSize, Point outShadowTouchPoint) {
+                super.onProvideShadowMetrics(outShadowSize, outShadowTouchPoint);
+                // Draw the drag shadow to the left of the touch point
+                outShadowTouchPoint.x = outShadowSize.x + (int)
+                        (getView().getResources().getDimension(R.dimen.drag_shadow_offset));
+            }
+        }
+
+        public long getId() {
+            return id;
+        }
+
+        public View.DragShadowBuilder getShadow() {
+            return shadow;
+        }
+
+        public void setDeleting(boolean deleting) {
+            int startColor = ((ColorDrawable) view.getBackground()).getColor();
+            int endColor = deleting ? deleteColor : bgColor;
+            ObjectAnimator.ofObject(view, "backgroundColor", new ArgbEvaluator(), startColor, endColor)
+                    .start();
+        }
+    }
+
+    private void animate(View view, boolean open) {
+        if (view == null) {
+            return;
+        }
+
+        float endPosition = open
+                ? -view.getResources().getDimension(R.dimen.list_item_offset)
+                : 0;
+        ObjectAnimator animX = ObjectAnimator.ofFloat(view, "translationX", endPosition);
+        animX.setInterpolator(new FastOutSlowInInterpolator());
+        animX.start();
+    }
+
+    public void animateClose() {
+        animate(openItem, false);
     }
 }
