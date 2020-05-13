@@ -13,6 +13,7 @@ import java.util.List;
 public class PhonebookRepository {
     private static PhonebookRepository INSTANCE = new PhonebookRepository();
     private static MutableLiveData<List<Contact>> phonebook;
+    private static List<Contact> oldList;
 
     private PhonebookRepository() {
         // TODO: fetch data from database, sorted by id
@@ -75,9 +76,16 @@ public class PhonebookRepository {
     public boolean delete(long id) {
         int index = getIndex(id);
         List<Contact> contacts = contacts();
+        oldList = new ArrayList<>(contacts);
         contacts.remove(index);
         phonebook.postValue(contacts);
         // TODO: try to delete via API, otherwise add this to backlog of contacts to delete
+        return false;
+    }
+
+    public boolean undoDelete() {
+        phonebook.postValue(oldList);
+        // TODO: try to re-add via API, otherwise add this to backlog of contacts to add
         return false;
     }
 

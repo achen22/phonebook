@@ -20,8 +20,17 @@ public class PhonebookViewModel extends ViewModel {
         return phonebook;
     }
 
+    public String getName(long id) {
+        Contact contact = repository.get(id);
+        return contact.getName();
+    }
+
     public void delete(long id) {
         // TODO: SnackBar to undo?
         repository.delete(id);
+    }
+
+    public void undoDelete() {
+        repository.undoDelete();
     }
 }
