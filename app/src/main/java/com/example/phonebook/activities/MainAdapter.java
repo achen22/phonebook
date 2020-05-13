@@ -16,16 +16,18 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.phonebook.R;
 import com.example.phonebook.data.Contact;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder> {
-    private List<Contact> contacts;
+    private List<Contact> contacts = new ArrayList<>();
     private View openItem = null;
 
     static class MainViewHolder extends RecyclerView.ViewHolder {
@@ -36,8 +38,13 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
         }
     }
 
-    MainAdapter(List<Contact> contacts) {
-        this.contacts = contacts;
+    public void setContacts(final List<Contact> contacts) {
+        DiffCallback callback = new DiffCallback(contacts);
+        DiffUtil.DiffResult result = DiffUtil.calculateDiff(callback);
+
+        this.contacts.clear();
+        this.contacts.addAll(contacts);
+        result.dispatchUpdatesTo(MainAdapter.this);
     }
 
     @NonNull
@@ -115,7 +122,36 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
 
     @Override
     public int getItemCount() {
-        return contacts.size();
+        return contacts == null ? 0 : contacts.size();
+    }
+
+    public class DiffCallback extends DiffUtil.Callback {
+        private List<Contact> oldList = contacts;
+        private List<Contact> newList;
+
+        public DiffCallback(List<Contact> newList) {
+            this.newList = newList;
+        }
+
+        @Override
+        public int getOldListSize() {
+            return oldList.size();
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newList.size();
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            return oldList.get(oldItemPosition).getId() == newList.get(newItemPosition).getId();
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            return oldList.get(oldItemPosition).equals(newList.get(newItemPosition));
+        }
     }
 
     private class OnGestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -179,15 +215,15 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
         ItemState(long id, View view) {
             this.id = id;
             this.view = view;
-            shadow = new ItemShadow(view);
+            shadow = new ItemShadow(view.findViewById(R.id.item_name_text));
             bgColor = ((ColorDrawable) view.getBackground()).getColor();
             deleteColor = (bgColor & 0xFF999999) + 0x660000; // 40% red
         }
 
         private static class ItemShadow extends View.DragShadowBuilder {
-            public ItemShadow(View view) {
+            ItemShadow(View view) {
                 // Set the drag shadow to show only the name TextView
-                super(view.findViewById(R.id.item_name_text));
+                super(view);
             }
 
             @Override

@@ -13,18 +13,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.SearchView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.widget.NestedScrollView;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.phonebook.R;
 import com.example.phonebook.data.Contact;
+import com.example.phonebook.viewmodels.PhonebookViewModel;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -33,6 +35,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = this.getClass().getSimpleName();
+    private PhonebookViewModel viewModel;
     private MenuItem searchMenuItem;
     private boolean useDarkTheme;
 
@@ -42,7 +45,8 @@ public class MainActivity extends AppCompatActivity {
         setThemeFromSharedPrefs();
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.appbar_main));
-        setRecyclerView();
+        viewModel = new ViewModelProvider(this).get(PhonebookViewModel.class);
+        setRecyclerView(viewModel);
         handleIntent(getIntent());
 
         View deleteBtn = findViewById(R.id.fab_delete);
@@ -61,8 +65,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case DragEvent.ACTION_DROP:
                         state.setDeleting(false);
-                        // TODO: delete from database
-                        Toast.makeText(v.getContext(), Long.toString(state.getId()), Toast.LENGTH_SHORT).show();
+                        viewModel.delete(state.getId());
                         break;
                 }
                 return true;
@@ -171,18 +174,25 @@ public class MainActivity extends AppCompatActivity {
         setTheme(useDarkTheme ? R.style.DarkTheme : R.style.AppTheme);
     }
 
-    private void setRecyclerView() {
+    private void setRecyclerView(PhonebookViewModel viewModel) {
         RecyclerView recyclerView = findViewById(R.id.list_main);
         LinearLayoutManager recyclerManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(recyclerManager);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, recyclerManager.getOrientation()));
-        final MainAdapter adapter = new MainAdapter(getSampleData());
+        final MainAdapter adapter = new MainAdapter();
         recyclerView.setAdapter(adapter);
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
                 adapter.animateClose();
+            }
+        });
+
+        viewModel.getContacts().observe(this, new Observer<List<Contact>>() {
+            @Override
+            public void onChanged(List<Contact> contacts) {
+                adapter.setContacts(contacts);
             }
         });
     }
