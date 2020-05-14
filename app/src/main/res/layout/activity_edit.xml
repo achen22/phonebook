@@ -7,18 +7,20 @@
     tools:context=".activities.EditActivity">
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/edit_name_field"
+        android:id="@+id/edit_name_layout"
+        android:hint="@string/name_field"
+        app:startIconDrawable="@drawable/ic_person"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:hint="@string/name_field"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_name_field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPersonName" />
@@ -26,8 +28,9 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/edit_email_field"
+        android:id="@+id/edit_email_layout"
         android:hint="@string/email_field"
+        app:startIconDrawable="@drawable/ic_email"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -35,9 +38,10 @@
         android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/edit_name_field">
+        app:layout_constraintTop_toBottomOf="@+id/edit_name_layout">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_email_field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textEmailAddress" />
@@ -45,8 +49,9 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/edit_phone_field"
+        android:id="@+id/edit_phone_layout"
         android:hint="@string/phone_field"
+        app:startIconDrawable="@drawable/ic_phone"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -54,9 +59,10 @@
         android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/edit_email_field">
+        app:layout_constraintTop_toBottomOf="@+id/edit_email_layout">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_phone_field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="phone" />
@@ -64,8 +70,10 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/edit_dob_field"
+        android:id="@+id/edit_dob_layout"
         android:hint="@string/dob_field"
+        app:startIconDrawable="@drawable/ic_cake"
+        app:endIconMode="clear_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -73,13 +81,16 @@
         android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/edit_phone_field">
+        app:layout_constraintTop_toBottomOf="@+id/edit_phone_layout">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_dob_field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="date"
-            android:isScrollContainer="true" />
+            android:inputType="none"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:longClickable="false" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -91,6 +102,6 @@
         android:text="@string/edit_page_btn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/edit_dob_field" />
+        app:layout_constraintTop_toBottomOf="@+id/edit_dob_layout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

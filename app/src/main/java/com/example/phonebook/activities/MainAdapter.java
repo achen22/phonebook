@@ -171,6 +171,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
             Intent intent = new Intent(view.getContext(), DetailActivity.class);
+            intent.putExtra("id", id);
             view.getContext().startActivity(intent);
             return true;
         }
