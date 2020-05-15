@@ -15,6 +15,7 @@ import android.widget.EditText;
 import android.widget.SearchView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.widget.NestedScrollView;
@@ -33,9 +34,12 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = this.getClass().getSimpleName();
+    public static final int SAVE_CONTACT_REQUEST = 1;
+
     private PhonebookViewModel viewModel;
     private MenuItem searchMenuItem;
     private boolean useDarkTheme;
+    private MainAdapter listAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(view.getContext(), AddActivity.class);
-                startActivity(intent);
+                startActivityForResult(intent, SAVE_CONTACT_REQUEST);
             }
         });
     }
@@ -143,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
+        listAdapter.animateClose();
         SharedPreferences preferences = getSharedPreferences(
                 getApplicationContext().getPackageName(), MODE_PRIVATE);
         if (preferences.getBoolean(WelcomeActivity.DARK_THEME_KEY, false) != useDarkTheme) {
@@ -155,6 +160,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         handleIntent(intent);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == SAVE_CONTACT_REQUEST && resultCode == RESULT_OK) {
+            assert data != null;
+            Contact contact = (Contact) data.getSerializableExtra("contact");
+            boolean added = contact.getId() == 0;
+
+            viewModel.save(contact);
+            if (added) {
+                showAddSnackBar(contact);
+            } else {
+                showUpdateSnackBar(contact);
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void setThemeFromSharedPrefs() {
@@ -178,20 +200,20 @@ public class MainActivity extends AppCompatActivity {
         LinearLayoutManager recyclerManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(recyclerManager);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, recyclerManager.getOrientation()));
-        final MainAdapter adapter = new MainAdapter();
-        recyclerView.setAdapter(adapter);
+        listAdapter = new MainAdapter(this);
+        recyclerView.setAdapter(listAdapter);
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
-                adapter.animateClose();
+                listAdapter.animateClose();
             }
         });
 
         viewModel.getContacts().observe(this, new Observer<List<Contact>>() {
             @Override
             public void onChanged(List<Contact> contacts) {
-                adapter.setContacts(contacts);
+                listAdapter.setContacts(contacts);
             }
         });
     }
@@ -239,11 +261,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showDeleteSnackBar(final long id) {
-        final String name = viewModel.getName(id);
-        newSnackBar(getResources().getString(R.string.item_deleted, name), new View.OnClickListener() {
+        String name = viewModel.getName(id);
+        newSnackBar(getString(R.string.item_deleted, name), new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 viewModel.undoDelete();
+            }
+        }).show();
+    }
+
+    private void showAddSnackBar(final Contact contact) {
+        String name = contact.getName();
+        newSnackBar(getString(R.string.item_added, name), new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewModel.undoSave();
+            }
+        }).show();
+    }
+
+    private void showUpdateSnackBar(final Contact contact) {
+        String name = contact.getName();
+        newSnackBar(getString(R.string.item_updated, name), new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewModel.undoSave();
             }
         }).show();
     }

@@ -25,9 +25,20 @@ public class PhonebookViewModel extends ViewModel {
         return contact.getName();
     }
 
+    public void save(Contact contact) {
+        repository.save(contact);
+    }
+
     public void delete(long id) {
-        // TODO: SnackBar to undo?
         repository.delete(id);
+    }
+
+    public void delete(Contact contact) {
+        repository.delete(contact);
+    }
+
+    public void undoSave() {
+        repository.undoSave();
     }
 
     public void undoDelete() {

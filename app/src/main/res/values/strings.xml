@@ -22,4 +22,5 @@
     <string name="item_updated">[%1$s] updated</string>
     <string name="item_deleted">[%1$s] deleted</string>
     <string name="undo">Undo</string>
+    <string name="name_cannot_be_empty_error">Name cannot be empty</string>
 </resources>

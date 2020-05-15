@@ -20,8 +20,14 @@ public class ContactViewModel extends ViewModel {
             setEmail(contact.getEmail());
             setPhone(contact.getPhone());
             calendar = new GregorianCalendar();
+            calendar.clear();
             calendar.setTime(contact.getDob());
         }
+    }
+
+    public Contact getContact() {
+        contact.setDob(calendar != null ? calendar.getTime() : null);
+        return contact;
     }
 
     public String getName() {

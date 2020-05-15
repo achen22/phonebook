@@ -28,6 +28,7 @@ public class DetailActivity extends BaseChildActivity {
             emailText.setText(contact.getEmail());
         } else {
             emailText.setText(R.string.empty_field);
+            emailText.setEnabled(false);
         }
 
         TextView phoneText = findViewById(R.id.detail_phone_text);
@@ -35,6 +36,7 @@ public class DetailActivity extends BaseChildActivity {
             phoneText.setText(contact.getPhone());
         } else {
             phoneText.setText(R.string.empty_field);
+            phoneText.setEnabled(false);
         }
         
         TextView dobText = findViewById(R.id.detail_dob_text);
@@ -43,6 +45,7 @@ public class DetailActivity extends BaseChildActivity {
             dobText.setText(format.format(contact.getDob()));
         } else {
             dobText.setText(R.string.empty_field);
+            dobText.setEnabled(false);
         }
 
         View btnBack = findViewById(R.id.detail_layout_btn);

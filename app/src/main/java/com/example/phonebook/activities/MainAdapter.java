@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.fragment.app.FragmentActivity;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
@@ -28,6 +29,7 @@ import java.util.List;
 
 public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder> {
     private List<Contact> contacts = new ArrayList<>();
+    private final FragmentActivity owner;
     private View openItem = null;
 
     static class MainViewHolder extends RecyclerView.ViewHolder {
@@ -36,6 +38,10 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
             super(itemView);
             layout = itemView;
         }
+    }
+
+    public MainAdapter(FragmentActivity owner) {
+        this.owner = owner;
     }
 
     public void setContacts(final List<Contact> contacts) {
@@ -50,7 +56,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
     @NonNull
     @Override
     public MainViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        LayoutInflater inflater = owner.getLayoutInflater();
         CoordinatorLayout layout = (CoordinatorLayout) inflater
                 .inflate(R.layout.list_item_contact, parent, false);
         return new MainViewHolder(layout);
@@ -61,33 +67,20 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
         final Contact contact = contacts.get(position);
         final GestureDetector gestureDetector;
 
-        TextView nameText = holder.layout.findViewById(R.id.item_name_text);
-        nameText.setText(contact.getName());
-
-        TextView emailText = holder.layout.findViewById(R.id.item_email_text);
-        if (contact.getEmail() != null) {
-            emailText.setText(contact.getEmail());
-        } else {
-            emailText.setText(R.string.empty_field);
-        }
-
-        TextView phoneText = holder.layout.findViewById(R.id.item_phone_text);
-        if (contact.getPhone() != null) {
-            phoneText.setText(contact.getPhone());
-        } else {
-            phoneText.setText(R.string.empty_field);
-        }
+        ((TextView) holder.layout.findViewById(R.id.item_name_text)).setText(contact.getName());
+        ((TextView) holder.layout.findViewById(R.id.item_email_text)).setText(contact.getEmail());
+        ((TextView) holder.layout.findViewById(R.id.item_phone_text)).setText(contact.getPhone());
 
         TextView dobText = holder.layout.findViewById(R.id.item_dob_text);
         if (contact.getDob() != null) {
             DateFormat format = DateFormat.getDateInstance();
             dobText.setText(format.format(contact.getDob()));
         } else {
-            dobText.setText(R.string.empty_field);
+            dobText.setText(null);
         }
 
         View item = holder.layout.findViewById(R.id.main_list_item);
-        gestureDetector = new GestureDetector(item.getContext(), new OnGestureListener(item, contact.getId()));
+        gestureDetector = new GestureDetector(owner, new OnGestureListener(item, contact.getId()));
         item.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -113,9 +106,9 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
         btnEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(), EditActivity.class);
+                Intent intent = new Intent(owner, EditActivity.class);
                 intent.putExtra("id", contact.getId());
-                view.getContext().startActivity(intent);
+                owner.startActivityForResult(intent, MainActivity.SAVE_CONTACT_REQUEST);
             }
         });
     }
@@ -170,28 +163,27 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
 
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
-            Intent intent = new Intent(view.getContext(), DetailActivity.class);
+            Intent intent = new Intent(owner, DetailActivity.class);
             intent.putExtra("id", id);
-            view.getContext().startActivity(intent);
+            owner.startActivity(intent);
             return true;
         }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             if (e1.getX() > e2.getX()) {
-                animate(openItem, false);
+                animateClose();
                 animate(view, true); // right-to-left swipe
                 openItem = view;
             } else if (view == openItem) {
-                animate(view, false);
-                openItem = null;
+                animateClose();
             }
             return true;
         }
 
         @Override
         public void onLongPress(MotionEvent e) {
-            animate(openItem, false);
+            animateClose();
             openItem = null;
             ItemState state = new ItemState(id, view);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -223,7 +215,6 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
 
         private static class ItemShadow extends View.DragShadowBuilder {
             ItemShadow(View view) {
-                // Set the drag shadow to show only the name TextView
                 super(view);
             }
 
@@ -267,5 +258,6 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
 
     public void animateClose() {
         animate(openItem, false);
+        openItem = null;
     }
 }

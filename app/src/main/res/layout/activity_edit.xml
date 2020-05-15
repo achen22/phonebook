@@ -10,6 +10,7 @@
         android:id="@+id/edit_name_layout"
         android:hint="@string/name_field"
         app:startIconDrawable="@drawable/ic_person"
+        app:errorEnabled="true"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"

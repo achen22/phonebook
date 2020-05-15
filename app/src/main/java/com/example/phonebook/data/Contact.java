@@ -1,21 +1,24 @@
 package com.example.phonebook.data;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Contact implements Comparable<Contact> {
+public class Contact implements Comparable<Contact>, Serializable {
     private long id;
-    private String name;
+    @NonNull private String name;
     private String email;
     private String phone;
     private Date dob;
 
     public Contact(long id) {
         this.id = id;
+        name = "";
     }
 
-    public Contact(long id, String name, String email, String phone, Date dob) {
+    public Contact(long id, @NonNull String name, String email, String phone, Date dob) {
         this.id = id;
         this.name = name;
         this.email = email;

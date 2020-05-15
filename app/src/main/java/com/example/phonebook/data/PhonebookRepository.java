@@ -14,6 +14,7 @@ public class PhonebookRepository {
     private static PhonebookRepository INSTANCE = new PhonebookRepository();
     private static MutableLiveData<List<Contact>> phonebook;
     private static List<Contact> oldList;
+    private static Contact oldContact;
 
     private PhonebookRepository() {
         // TODO: fetch data from database, sorted by id
@@ -53,18 +54,20 @@ public class PhonebookRepository {
      */
     public boolean save(Contact contact) {
         List<Contact> contacts = new ArrayList<>(contacts());
+        oldList = new ArrayList<>(contacts);
         if (contact.getId() == 0) {
             // Insert new contact
             long id = contacts.get(contacts.size() - 1).getId() + 1;
+            oldContact = new Contact(id);
             contact.setId(id);
             contacts.add(contact);
-            phonebook.postValue(contacts());
+            phonebook.postValue(contacts);
             // TODO: try to get id assigned via API, otherwise add this to backlog of contacts to add
         } else {
             // Update existing contact
             int index = getIndex(contact.getId());
-            Contact original = contacts.get(index);
-            if (!contact.equals(original)) {
+            oldContact = contacts.get(index);
+            if (!contact.equals(oldContact)) {
                 contacts.set(index, contact);
                 phonebook.postValue(contacts);
                 // TODO: try to update via API, otherwise add this to backlog of contacts to update
@@ -77,9 +80,28 @@ public class PhonebookRepository {
         int index = getIndex(id);
         List<Contact> contacts = contacts();
         oldList = new ArrayList<>(contacts);
-        contacts.remove(index);
-        phonebook.postValue(contacts);
+        oldContact = contacts.remove(index);
+        if (oldContact != null) {
+            phonebook.postValue(contacts);
+            // TODO: try to delete via API, otherwise add this to backlog of contacts to delete
+        }
+        return false;
+    }
+
+    public boolean delete(Contact contact) {
+        List<Contact> contacts = contacts();
+        oldList = new ArrayList<>(contacts);
+        if (contacts.remove(contact)) {
+            oldContact = contact;
+            phonebook.postValue(contacts);
+        }
         // TODO: try to delete via API, otherwise add this to backlog of contacts to delete
+        return false;
+    }
+
+    public boolean undoSave() {
+        phonebook.postValue(oldList);
+        // TODO: try to undo via API, otherwise add this to backlog of contacts to delete/update
         return false;
     }
 

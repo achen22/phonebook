@@ -1,5 +1,6 @@
 package com.example.phonebook.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -21,12 +22,24 @@ public class EditActivity extends BaseChildActivity {
         viewModel = new ViewModelProvider(this).get(ContactViewModel.class);
         viewModel.load(getIntent().getLongExtra("id", 0));
 
-        EditText nameField = findViewById(R.id.edit_name_field);
+        final TextInputLayout nameLayout = findViewById(R.id.edit_name_layout);
+        final EditText nameField = findViewById(R.id.edit_name_field);
         nameField.setText(viewModel.getName());
         nameField.addTextChangedListener(new OnTextChangedWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length() != 0) {
+                    nameLayout.setError(null);
+                }
                 viewModel.setName(s.toString());
+            }
+        });
+        nameField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus && nameField.getText().length() == 0) {
+                    nameLayout.setError(getText(R.string.name_cannot_be_empty_error));
+                }
             }
         });
 
@@ -72,8 +85,14 @@ public class EditActivity extends BaseChildActivity {
         btnEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: update database
-                finish();
+                if (nameField.getText().length() != 0) {
+                    Intent data = new Intent().putExtra("contact", viewModel.getContact());
+                    setResult(RESULT_OK, data);
+                    finish();
+                } else {
+                    nameLayout.setError(getText(R.string.name_cannot_be_empty_error));
+                    nameLayout.requestFocus();
+                }
             }
         });
     }
