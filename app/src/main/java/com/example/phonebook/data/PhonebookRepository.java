@@ -7,7 +7,6 @@ import androidx.lifecycle.MutableLiveData;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class PhonebookRepository {
@@ -44,7 +43,7 @@ public class PhonebookRepository {
     }
 
     private int getIndex(long id) {
-        return Collections.binarySearch(contacts(), new Contact(id));
+        return Utils.searchContactsById(contacts(), id);
     }
 
     /**

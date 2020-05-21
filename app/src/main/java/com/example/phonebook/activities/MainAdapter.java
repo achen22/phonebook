@@ -22,12 +22,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.phonebook.R;
 import com.example.phonebook.data.Contact;
+import com.example.phonebook.data.ContactsHashTable;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder> {
+    private ContactsHashTable hashTable;
     private List<Contact> contacts = new ArrayList<>();
     private final FragmentActivity owner;
     private View openItem = null;
@@ -44,13 +46,15 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
         this.owner = owner;
     }
 
-    public void setContacts(final List<Contact> contacts) {
-        DiffCallback callback = new DiffCallback(contacts);
+    public void setContacts(final ContactsHashTable contacts) {
+        List<Contact> list = contacts.toList();
+        DiffCallback callback = new DiffCallback(list);
         DiffUtil.DiffResult result = DiffUtil.calculateDiff(callback);
 
         this.contacts.clear();
-        this.contacts.addAll(contacts);
-        result.dispatchUpdatesTo(MainAdapter.this);
+        this.contacts.addAll(list);
+        hashTable = contacts;
+        result.dispatchUpdatesTo(this);
     }
 
     @NonNull

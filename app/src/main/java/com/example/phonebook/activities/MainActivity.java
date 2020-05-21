@@ -27,10 +27,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.phonebook.R;
 import com.example.phonebook.data.Contact;
+import com.example.phonebook.data.ContactsHashTable;
 import com.example.phonebook.viewmodels.PhonebookViewModel;
 import com.google.android.material.snackbar.Snackbar;
-
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = this.getClass().getSimpleName();
@@ -80,6 +79,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 searchMenuItem.expandActionView();
+            }
+        });
+
+        View sortBtn = findViewById(R.id.fab_sort_az);
+        sortBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewModel.setReverse(false);
+            }
+        });
+
+        View reverseSortBtn = findViewById(R.id.fab_sort_za);
+        reverseSortBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                viewModel.setReverse(true);
             }
         });
 
@@ -210,9 +225,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        viewModel.getContacts().observe(this, new Observer<List<Contact>>() {
+        viewModel.getContacts().observe(this, new Observer<ContactsHashTable>() {
             @Override
-            public void onChanged(List<Contact> contacts) {
+            public void onChanged(ContactsHashTable contacts) {
                 listAdapter.setContacts(contacts);
             }
         });
