@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ContactsHashTable {
     private List<Contact> contacts;
-    private char[] sections;
+    private String[] sections;
     private int[] index;
 
     public ContactsHashTable(List<Contact> contacts, boolean reverse) {
@@ -15,12 +15,12 @@ public class ContactsHashTable {
 
         // create sections
         int length = 26;
-        char WILDCARD = '#';
-        sections = new char[length + 1];
+        String WILDCARD = "#";
+        sections = new String[length + 1];
         sections[0] = WILDCARD;
         for (int i = 0; i < length; i++) {
             int position = reverse ? length - 1 - i : i;
-            sections[position + 1] = (char) ('A' + i);
+            sections[position + 1] = String.valueOf((char) ('A' + i));
         }
 
         // get indexes
@@ -29,7 +29,7 @@ public class ContactsHashTable {
         index[1] = pos;
         int i;
         for (i = 2; i < index.length && pos != this.contacts.size(); i++) {
-            while (hash(this.contacts.get(pos)) > sections[i] == reverse) {
+            while (hash(this.contacts.get(pos)) > i == reverse) {
                 if (++pos == this.contacts.size()) {
                     break;
                 }
@@ -39,15 +39,18 @@ public class ContactsHashTable {
         Arrays.fill(index, i, index.length, pos);
     }
 
-    public static char hash(Contact contact) {
-        return Character.toUpperCase(contact.getName().charAt(0));
+    public static int hash(Contact contact) {
+        char c = Character.toUpperCase(contact.getName().charAt(0));
+        return c >= 'A' && c <= 'Z'
+                ? c - 'A' + 1
+                : 0;
     }
 
     public int[] getIndex() {
         return index.clone();
     }
 
-    public char[] getSections() {
+    public String[] getSections() {
         return sections.clone();
     }
 

@@ -11,11 +11,11 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.SectionIndexer;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.fragment.app.FragmentActivity;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
@@ -28,10 +28,10 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder> {
+public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder> implements SectionIndexer {
     private ContactsHashTable hashTable;
     private List<Contact> contacts = new ArrayList<>();
-    private final FragmentActivity owner;
+    private final MainActivity owner;
     private View openItem = null;
 
     static class MainViewHolder extends RecyclerView.ViewHolder {
@@ -42,18 +42,18 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
         }
     }
 
-    public MainAdapter(FragmentActivity owner) {
+    public MainAdapter(MainActivity owner) {
         this.owner = owner;
     }
 
     public void setContacts(final ContactsHashTable contacts) {
+        hashTable = contacts;
         List<Contact> list = contacts.toList();
         DiffCallback callback = new DiffCallback(list);
         DiffUtil.DiffResult result = DiffUtil.calculateDiff(callback);
 
         this.contacts.clear();
         this.contacts.addAll(list);
-        hashTable = contacts;
         result.dispatchUpdatesTo(this);
     }
 
@@ -62,7 +62,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
     public MainViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = owner.getLayoutInflater();
         CoordinatorLayout layout = (CoordinatorLayout) inflater
-                .inflate(R.layout.list_item_contact, parent, false);
+                .inflate(R.layout.main_list_item, parent, false);
         return new MainViewHolder(layout);
     }
 
@@ -151,6 +151,21 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
         }
     }
 
+    @Override
+    public String[] getSections() {
+        return hashTable.getSections();
+    }
+
+    @Override
+    public int getPositionForSection(int sectionIndex) {
+        return hashTable.getIndex()[sectionIndex];
+    }
+
+    @Override
+    public int getSectionForPosition(int position) {
+        return ContactsHashTable.hash(contacts.get(position));
+    }
+
     private class OnGestureListener extends GestureDetector.SimpleOnGestureListener {
         private final View view;
         private final long id;
@@ -178,7 +193,9 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
             if (e1.getX() > e2.getX()) {
                 animateClose();
                 animate(view, true); // right-to-left swipe
+                owner.setFabVisible(false);
                 openItem = view;
+
             } else if (view == openItem) {
                 animateClose();
             }
@@ -263,5 +280,6 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
     public void animateClose() {
         animate(openItem, false);
         openItem = null;
+        owner.setFabVisible(true);
     }
 }

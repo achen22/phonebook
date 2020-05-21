@@ -1,5 +1,6 @@
 package com.example.phonebook.activities;
 
+import android.animation.ObjectAnimator;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.SearchView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -29,6 +31,8 @@ import com.example.phonebook.R;
 import com.example.phonebook.data.Contact;
 import com.example.phonebook.data.ContactsHashTable;
 import com.example.phonebook.viewmodels.PhonebookViewModel;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
 public class MainActivity extends AppCompatActivity {
@@ -47,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.appbar_main));
         viewModel = new ViewModelProvider(this).get(PhonebookViewModel.class);
-        setRecyclerView(viewModel);
+        setRecyclerView();
         handleIntent(getIntent());
 
         View deleteBtn = findViewById(R.id.fab_delete);
@@ -210,18 +214,21 @@ public class MainActivity extends AppCompatActivity {
         setTheme(useDarkTheme ? R.style.DarkTheme : R.style.AppTheme);
     }
 
-    private void setRecyclerView(PhonebookViewModel viewModel) {
-        RecyclerView recyclerView = findViewById(R.id.list_main);
+    private void setRecyclerView() {
+        final RecyclerView recyclerView = findViewById(R.id.list_main);
         LinearLayoutManager recyclerManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(recyclerManager);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, recyclerManager.getOrientation()));
         listAdapter = new MainAdapter(this);
         recyclerView.setAdapter(listAdapter);
+
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
-                listAdapter.animateClose();
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    listAdapter.animateClose();
+                }
             }
         });
 
@@ -229,8 +236,29 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(ContactsHashTable contacts) {
                 listAdapter.setContacts(contacts);
+                setIndexView(contacts.getSections());
             }
         });
+    }
+
+    private void setIndexView(String[] sections) {
+        ViewGroup indexLayout = findViewById(R.id.main_index);
+
+        // Set number of child views
+        if (sections.length != 0 && sections.length != indexLayout.getChildCount()) {
+            int diff = sections.length - indexLayout.getChildCount();
+            if (diff > 0) {
+                for (int i = 0; i < diff; i++) {
+                    getLayoutInflater().inflate(R.layout.main_index_item, indexLayout);
+                }
+            }
+        }
+
+        // Set text for child views
+        for (int i = 0; i < sections.length; i++) {
+            TextView view = (TextView) indexLayout.getChildAt(i);
+            view.setText(sections[i]);
+        }
     }
 
     private void handleIntent(Intent intent) {
@@ -270,9 +298,40 @@ public class MainActivity extends AppCompatActivity {
         searchView.findViewById(resId).setBackground(null);
     }
 
+    public void setFabVisible(boolean visible) {
+        ViewGroup fabs = (ViewGroup) findViewById(R.id.fab_add).getParent();
+        int count = fabs.getChildCount();
+        if (visible) {
+            for (int i = 0; i < count; i++) {
+                ((FloatingActionButton) fabs.getChildAt(i)).show();
+            }
+        } else {
+            for (int i = 0; i < count; i++) {
+                ((FloatingActionButton) fabs.getChildAt(i)).hide();
+            }
+        }
+    }
+
     private Snackbar newSnackBar(String message, View.OnClickListener listener) {
         return Snackbar.make(findViewById(R.id.layout_main), message, Snackbar.LENGTH_LONG)
-                .setAction(R.string.undo, listener);
+                .setAction(R.string.undo, listener)
+                .addCallback(new BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                    private View fabs = findViewById(R.id.fabs_main);
+
+                    @Override
+                    public void onDismissed(Snackbar transientBottomBar, int event) {
+                        super.onDismissed(transientBottomBar, event);
+                        ObjectAnimator.ofFloat(fabs, "translationY",
+                                getResources().getDimension(R.dimen.drag_shadow_offset))
+                                .start();
+                    }
+
+                    @Override
+                    public void onShown(Snackbar transientBottomBar) {
+                        ObjectAnimator.ofFloat(fabs, "translationY", 0).start();
+                        super.onShown(transientBottomBar);
+                    }
+                });
     }
 
     private void showDeleteSnackBar(final long id) {
