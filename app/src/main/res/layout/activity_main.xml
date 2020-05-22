@@ -23,26 +23,29 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.core.widget.NestedScrollView
-            android:id="@+id/main_index_scroll"
+        <ImageView
+            android:id="@+id/index_cursor"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:tint="@color/colorAccent"
+            app:layout_constraintDimensionRatio="1"
+            app:layout_constraintEnd_toEndOf="@+id/main_index"
+            app:layout_constraintStart_toStartOf="@id/main_index"
+            app:layout_constraintTop_toTopOf="@id/main_index"
+            app:srcCompat="@android:drawable/dialog_frame" />
+
+        <LinearLayout
+            android:id="@+id/main_index"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:fillViewport="true"
+            android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/divider"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <LinearLayout
-                android:id="@+id/main_index"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_margin="4dp"
-                android:orientation="vertical">
-
-            </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
+        </LinearLayout>
 
         <View
             android:id="@+id/divider"
@@ -52,7 +55,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/list_main"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/main_index_scroll"
+            app:layout_constraintStart_toEndOf="@+id/main_index"
             app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.recyclerview.widget.RecyclerView

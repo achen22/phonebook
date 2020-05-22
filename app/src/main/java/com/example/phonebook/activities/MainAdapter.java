@@ -70,6 +70,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
     public void onBindViewHolder(@NonNull MainViewHolder holder, int position) {
         final Contact contact = contacts.get(position);
         final GestureDetector gestureDetector;
+        owner.updateIndex();
 
         ((TextView) holder.layout.findViewById(R.id.item_name_text)).setText(contact.getName());
         ((TextView) holder.layout.findViewById(R.id.item_email_text)).setText(contact.getEmail());
@@ -163,7 +164,11 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
 
     @Override
     public int getSectionForPosition(int position) {
-        return ContactsHashTable.hash(contacts.get(position));
+        return hashTable.getSectionForIndex(position);
+    }
+
+    public boolean isSectionEmpty(int sectionIndex) {
+        return hashTable.isSectionEmpty(sectionIndex);
     }
 
     private class OnGestureListener extends GestureDetector.SimpleOnGestureListener {
