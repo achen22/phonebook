@@ -139,4 +139,42 @@ public class Utils {
         // all items are non-alphabet characters
         return size;
     }
+
+    public static int hash(String s) {
+        return s == null || s.isEmpty() ? 0 : s.charAt(0);
+    }
+
+    public static int[] search(List<String> list, String s) {
+        int hash = hash(s);
+        int offset = 0;
+        assert list.size() > 0;
+
+        while (!list.isEmpty() && hash(list.get(0)) < hash) {
+            offset++;
+            list.remove(0);
+        }
+
+        if (list.isEmpty() || hash(list.get(0)) != hash) {
+            return new int[] { offset, offset };
+        }
+
+        int start = 1;
+        while (start != list.size() && hash(list.get(start)) == hash) {
+            start++;
+        }
+        list.subList(start, list.size()).clear();
+
+        int length = list.size();
+        if (s.length() == 1) {
+            return new int[] { offset, offset + length };
+        }
+        for (int i = 0; i < length; i++) {
+            list.set(i, list.get(i).substring(1));
+        }
+
+        int[] result = search(list, s.substring(1));
+        result[0] += offset;
+        result[1] += offset;
+        return result;
+    }
 }

@@ -9,19 +9,23 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 public class ContactViewModel extends ViewModel {
-    private Contact contact = new Contact(0);
+    private Contact contact = new Contact(-1);
     private Calendar calendar = null;
 
     public void load(long id) {
-        if (id != 0 && contact.getId() != id) {
+        if (id != -1 && contact.getId() != id) {
             Contact contact = PhonebookRepository.getInstance().get(id);
             this.contact.setId(contact.getId());
             setName(contact.getName());
             setEmail(contact.getEmail());
             setPhone(contact.getPhone());
-            calendar = new GregorianCalendar();
-            calendar.clear();
-            calendar.setTime(contact.getDob());
+            if (contact.getDob() == null) {
+                calendar = null;
+            } else {
+                calendar = new GregorianCalendar();
+                calendar.clear();
+                calendar.setTime(contact.getDob());
+            }
         }
     }
 

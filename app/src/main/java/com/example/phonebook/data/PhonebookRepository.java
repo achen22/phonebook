@@ -54,9 +54,12 @@ public class PhonebookRepository {
     public boolean save(Contact contact) {
         List<Contact> contacts = new ArrayList<>(contacts());
         oldList = new ArrayList<>(contacts);
-        if (contact.getId() == 0) {
+        if (contact.getId() == -1) {
             // Insert new contact
-            long id = contacts.get(contacts.size() - 1).getId() + 1;
+            long id = 0;
+            if (!contacts.isEmpty()) {
+                id = contacts.get(contacts.size() - 1).getId() + 1;
+            }
             oldContact = new Contact(id);
             contact.setId(id);
             contacts.add(contact);

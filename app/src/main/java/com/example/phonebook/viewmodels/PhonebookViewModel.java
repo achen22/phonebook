@@ -1,5 +1,6 @@
 package com.example.phonebook.viewmodels;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.Observer;
@@ -14,7 +15,9 @@ import java.util.List;
 public class PhonebookViewModel extends ViewModel {
     private PhonebookRepository repository;
     private LiveData<List<Contact>> phonebook;
+    private ContactsHashTable hashTable;
     private boolean reverse = false;
+    @NonNull private String search = "";
     private MediatorLiveData<ContactsHashTable> contacts = new MediatorLiveData<>();
 
     public LiveData<ContactsHashTable> getContacts() {
@@ -25,7 +28,8 @@ public class PhonebookViewModel extends ViewModel {
                 @Override
                 public void onChanged(List<Contact> list) {
                     if (list != null) {
-                        contacts.postValue(new ContactsHashTable(list, reverse));
+                        hashTable = new ContactsHashTable(list, reverse);
+                        updateContactsLiveData();
                     }
                 }
             });
@@ -41,7 +45,27 @@ public class PhonebookViewModel extends ViewModel {
     public void setReverse (boolean reverse) {
         if (this.reverse != reverse) {
             this.reverse = reverse;
-            contacts.postValue(new ContactsHashTable(phonebook.getValue(), reverse));
+            hashTable = new ContactsHashTable(phonebook.getValue(), reverse);
+            updateContactsLiveData();
+        }
+    }
+
+    public void setSearchString(@NonNull String search) {
+        if (!this.search.equalsIgnoreCase(search)) {
+            this.search = search;
+            updateContactsLiveData();
+        }
+    }
+
+    @NonNull public String getSearchString() {
+        return search;
+    }
+
+    private void updateContactsLiveData() {
+        if (search.isEmpty()) {
+            contacts.postValue(hashTable);
+        } else {
+            contacts.postValue(new ContactsHashTable(hashTable.searchName(search), reverse));
         }
     }
 

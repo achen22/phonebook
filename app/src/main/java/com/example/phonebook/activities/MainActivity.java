@@ -35,7 +35,6 @@ import com.example.phonebook.data.Contact;
 import com.example.phonebook.data.ContactsHashTable;
 import com.example.phonebook.viewmodels.PhonebookViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
 public class MainActivity extends AppCompatActivity {
@@ -162,10 +161,33 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
                 searchView.onActionViewCollapsed();
+                viewModel.setSearchString("");
                 return true;
             }
         });
 
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText == null) {
+                    newText = "";
+                }
+                viewModel.setSearchString(newText);
+                return true;
+            }
+        });
+
+        // restore previous search result
+        String search = viewModel.getSearchString();
+        if (!search.isEmpty()) {
+            searchMenuItem.expandActionView();
+            searchView.setQuery(search, false);
+        }
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -213,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == SAVE_CONTACT_REQUEST && resultCode == RESULT_OK) {
             assert data != null;
             Contact contact = (Contact) data.getSerializableExtra("contact");
-            boolean added = contact.getId() == 0;
+            boolean added = contact.getId() == -1;
 
             viewModel.save(contact);
             if (added) {
@@ -293,8 +315,60 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getContacts().observe(this, new Observer<ContactsHashTable>() {
             @Override
             public void onChanged(ContactsHashTable contacts) {
-                listAdapter.setContacts(contacts);
-                setIndexView(contacts.getSections());
+                final View listLayout = findViewById(R.id.list_main_layout);
+                final View emptyLayout = findViewById(R.id.empty_state_layout);
+                if (contacts.isEmpty()) {
+                    setFabVisible(false);
+                    if (listLayout.getVisibility() != View.GONE
+                            || emptyLayout.getVisibility() != View.VISIBLE) {
+                        // cross-fade to empty state layout
+                        emptyLayout.setVisibility(View.VISIBLE);
+                        emptyLayout.animate().alpha(1f).setDuration(shortAnimTime).setListener(null);
+                        listLayout.animate().alpha(0f).setDuration(shortAnimTime)
+                                .setListener(new AnimatorListenerAdapter() {
+                                    @Override
+                                    public void onAnimationEnd(Animator animation) {
+                                        listLayout.setVisibility(View.GONE);
+                                    }
+                                });
+                    }
+                    if (searchMenuItem != null && searchMenuItem.isActionViewExpanded()) {
+                        // empty result set
+                        findViewById(R.id.empty_result_image).setVisibility(View.VISIBLE);
+                        findViewById(R.id.empty_data_image).setVisibility(View.GONE);
+                        ((TextView) findViewById(R.id.empty_state_text)).setText(R.string.empty_result);
+                    } else {
+                        // empty data set
+                        if (searchMenuItem != null) {
+                            searchMenuItem.setVisible(false);
+                        }
+                        findViewById(R.id.empty_result_image).setVisibility(View.GONE);
+                        findViewById(R.id.empty_data_image).setVisibility(View.VISIBLE);
+                        ((TextView) findViewById(R.id.empty_state_text)).setText(R.string.empty_data);
+                        FloatingActionButton fabAdd = findViewById(R.id.fab_add);
+                        fabAdd.show();
+                    }
+                } else {
+                    setFabVisible(true);
+                    if (searchMenuItem != null) {
+                        searchMenuItem.setVisible(true);
+                    }
+                    if (emptyLayout.getVisibility() != View.GONE
+                            || listLayout.getVisibility() != View.VISIBLE) {
+                        listLayout.setVisibility(View.VISIBLE);
+                        listLayout.animate().alpha(1f).setDuration(shortAnimTime).setListener(null);
+                        // cross-fade to list view layout
+                        emptyLayout.animate().alpha(0f).setDuration(shortAnimTime)
+                                .setListener(new AnimatorListenerAdapter() {
+                                    @Override
+                                    public void onAnimationEnd(Animator animation) {
+                                        emptyLayout.setVisibility(View.GONE);
+                                    }
+                                });
+                    }
+                    listAdapter.setContacts(contacts);
+                    setIndexView(contacts.getSections());
+                }
             }
         });
     }
@@ -350,11 +424,10 @@ public class MainActivity extends AppCompatActivity {
     private void handleIntent(Intent intent) {
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
-            if (query == null || query.isEmpty()) {
-                searchMenuItem.expandActionView();
-            } else {
-                // TODO: use the query to filter recyclerView items
+            if (query == null) {
+                query = "";
             }
+            viewModel.setSearchString(query);
         }
     }
 
@@ -416,7 +489,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         int index = listAdapter.getSectionForPosition(pos);
-        if (currentSection == index) {
+        if (index == -1 || currentSection == index) {
             return;
         }
 
@@ -439,22 +512,7 @@ public class MainActivity extends AppCompatActivity {
     private Snackbar newSnackBar(String message, View.OnClickListener listener) {
         return Snackbar.make(findViewById(R.id.layout_main), message, Snackbar.LENGTH_LONG)
                 .setAction(R.string.undo, listener)
-                .addCallback(new BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                    private View fabs = findViewById(R.id.fabs_main);
-
-                    @Override
-                    public void onDismissed(Snackbar transientBottomBar, int event) {
-                        super.onDismissed(transientBottomBar, event);
-                        float y = getResources().getDimension(R.dimen.drag_shadow_offset);
-                        fabs.animate().translationY(y).setDuration(shortAnimTime);
-                    }
-
-                    @Override
-                    public void onShown(Snackbar transientBottomBar) {
-                        fabs.animate().translationY(0).setDuration(shortAnimTime);
-                        super.onShown(transientBottomBar);
-                    }
-                });
+                .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE);
     }
 
     private void showDeleteSnackBar(final long id) {

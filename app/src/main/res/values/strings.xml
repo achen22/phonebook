@@ -23,4 +23,6 @@
     <string name="item_deleted">[%1$s] deleted</string>
     <string name="undo">Undo</string>
     <string name="name_cannot_be_empty_error">Name cannot be empty</string>
+    <string name="empty_data">There\'s nothing here</string>
+    <string name="empty_result">No matching results</string>
 </resources>

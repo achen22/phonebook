@@ -283,8 +283,10 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
     }
 
     public void animateClose() {
-        animate(openItem, false);
-        openItem = null;
-        owner.setFabVisible(true);
+        if (openItem != null) {
+            animate(openItem, false);
+            openItem = null;
+            owner.setFabVisible(true);
+        }
     }
 }
