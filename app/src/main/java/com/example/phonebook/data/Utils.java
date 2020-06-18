@@ -39,10 +39,10 @@ public class Utils {
         // Trivial cases where list is already sorted
         if (list.isEmpty()) {
             return 0;
-        }  else if (list.size() <= 1) {
+        } else if (list.size() == 1) {
             Contact contact = list.get(0);
             char c = Character.toUpperCase(contact.getName().charAt(0));
-            return c >= 'A' && c <= 'Z' ? 1 : 0;
+            return c >= 'A' && c <= 'Z' ? 0 : 1;
         }
 
         List<List<Contact>> sortList = new ArrayList<>();
@@ -147,22 +147,39 @@ public class Utils {
     public static int[] search(List<String> list, String s) {
         int hash = hash(s);
         int offset = 0;
-        assert list.size() > 0;
+        int mid = 0;
 
-        while (!list.isEmpty() && hash(list.get(0)) < hash) {
-            offset++;
-            list.remove(0);
+        while (!list.isEmpty()) {
+            mid = list.size() / 2;
+            if (hash(list.get(mid)) == hash) {
+                // matched
+                break;
+            } else if (hash(list.get(mid)) < hash) {
+                // only search elements after this position
+                list.subList(0, mid + 1).clear();
+                offset += mid + 1;
+            } else {
+                // only search elements before this position
+                list.subList(mid, list.size()).clear();
+            }
         }
 
-        if (list.isEmpty() || hash(list.get(0)) != hash) {
+        if (list.isEmpty()) {
             return new int[] { offset, offset };
         }
 
-        int start = 1;
-        while (start != list.size() && hash(list.get(start)) == hash) {
-            start++;
+        int end = mid;
+        while (end != list.size() && hash(list.get(end)) == hash) {
+            end++;
         }
-        list.subList(start, list.size()).clear();
+        list.subList(end, list.size()).clear();
+
+        while (mid != -1 && hash(list.get(mid)) == hash) {
+            mid--;
+        }
+        mid++;
+        offset += mid;
+        list.subList(0, mid).clear();
 
         int length = list.size();
         if (s.length() == 1) {
