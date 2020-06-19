@@ -2,12 +2,15 @@ package com.example.phonebook.data;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
 import java.io.Serializable;
 import java.util.Date;
 
+@Entity
 public class Contact implements Comparable<Contact>, Serializable {
-    private long id;
+    @PrimaryKey private long id;
     @NonNull private String name;
     private String email;
     private String phone;
