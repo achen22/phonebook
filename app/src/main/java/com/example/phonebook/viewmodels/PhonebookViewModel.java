@@ -1,5 +1,7 @@
 package com.example.phonebook.viewmodels;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -20,9 +22,9 @@ public class PhonebookViewModel extends ViewModel {
     @NonNull private String search = "";
     private MediatorLiveData<ContactsHashTable> contacts = new MediatorLiveData<>();
 
-    public LiveData<ContactsHashTable> getContacts() {
+    public LiveData<ContactsHashTable> getContacts(Context context) {
         if (repository == null) {
-            repository = PhonebookRepository.getInstance();
+            repository = PhonebookRepository.getInstance(context);
             phonebook = repository.all();
             contacts.addSource(phonebook, new Observer<List<Contact>>() {
                 @Override
@@ -35,11 +37,6 @@ public class PhonebookViewModel extends ViewModel {
             });
         }
         return contacts;
-    }
-
-    public String getName(long id) {
-        Contact contact = repository.get(id);
-        return contact.getName();
     }
 
     public void setReverse (boolean reverse) {

@@ -3,6 +3,7 @@ package com.example.phonebook.data;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import java.io.Serializable;
@@ -16,6 +17,7 @@ public class Contact implements Comparable<Contact>, Serializable {
     private String phone;
     private Date dob;
 
+    @Ignore
     public Contact(long id) {
         this.id = id;
         name = "";

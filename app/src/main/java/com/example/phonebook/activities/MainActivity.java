@@ -96,8 +96,8 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case DragEvent.ACTION_DROP:
                         state.setDeleting(false);
-                        showDeleteSnackBar(state.getId());
-                        viewModel.delete(state.getId());
+                        showDeleteSnackBar(state.getContact());
+                        viewModel.delete(state.getContact());
                         break;
                 }
                 return true;
@@ -312,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        viewModel.getContacts().observe(this, new Observer<ContactsHashTable>() {
+        viewModel.getContacts(getApplicationContext()).observe(this, new Observer<ContactsHashTable>() {
             @Override
             public void onChanged(ContactsHashTable contacts) {
                 final View listLayout = findViewById(R.id.list_main_layout);
@@ -329,6 +329,7 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void onAnimationEnd(Animator animation) {
                                         listLayout.setVisibility(View.GONE);
+                                        emptyLayout.setVisibility(View.VISIBLE);
                                     }
                                 });
                     }
@@ -363,6 +364,7 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void onAnimationEnd(Animator animation) {
                                         emptyLayout.setVisibility(View.GONE);
+                                        listLayout.setVisibility(View.VISIBLE);
                                     }
                                 });
                     }
@@ -515,8 +517,8 @@ public class MainActivity extends AppCompatActivity {
                 .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE);
     }
 
-    private void showDeleteSnackBar(final long id) {
-        String name = viewModel.getName(id);
+    private void showDeleteSnackBar(final Contact contact) {
+        String name = contact.getName();
         newSnackBar(getString(R.string.item_deleted, name), new View.OnClickListener() {
             @Override
             public void onClick(View v) {

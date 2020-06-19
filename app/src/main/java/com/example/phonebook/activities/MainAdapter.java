@@ -85,7 +85,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
         }
 
         View item = holder.layout.findViewById(R.id.main_list_item);
-        gestureDetector = new GestureDetector(owner, new OnGestureListener(item, contact.getId()));
+        gestureDetector = new GestureDetector(owner, new OnGestureListener(item, contact));
         item.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -174,10 +174,12 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
     private class OnGestureListener extends GestureDetector.SimpleOnGestureListener {
         private final View view;
         private final long id;
+        private final Contact contact;
 
-        OnGestureListener(View view, long id) {
+        OnGestureListener(View view, Contact contact) {
             this.view = view;
-            this.id = id;
+            this.id = contact.getId();
+            this.contact = contact;
         }
 
         @Override
@@ -211,7 +213,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
         public void onLongPress(MotionEvent e) {
             animateClose();
             openItem = null;
-            ItemState state = new ItemState(id, view);
+            ItemState state = new ItemState(contact, view);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 view.startDragAndDrop(null, state.getShadow(), state, 0);
             } else {
@@ -225,14 +227,14 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
     }
 
     public static class ItemState {
-        private long id;
+        private Contact contact;
         private View view;
         private ItemShadow shadow;
         private int bgColor;
         private int deleteColor;
 
-        ItemState(long id, View view) {
-            this.id = id;
+        ItemState(Contact contact, View view) {
+            this.contact = contact;
             this.view = view;
             shadow = new ItemShadow(view.findViewById(R.id.item_name_text));
             bgColor = ((ColorDrawable) view.getBackground()).getColor();
@@ -253,8 +255,8 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
             }
         }
 
-        public long getId() {
-            return id;
+        public Contact getContact() {
+            return contact;
         }
 
         public View.DragShadowBuilder getShadow() {

@@ -12,7 +12,10 @@ import java.util.List;
 @Dao
 public interface ContactDao {
     @Query("SELECT * FROM Contact ORDER BY id")
-    LiveData<List<Contact>> select();
+    LiveData<List<Contact>> all();
+
+    @Query("SELECT * FROM Contact WHERE id = :id")
+    LiveData<Contact> get(long id);
 
     @Query("SELECT * FROM Contact WHERE id = :id")
     Contact select(long id);
@@ -23,4 +26,7 @@ public interface ContactDao {
 
     @Query("UPDATE Contact SET id = :newId WHERE id = :oldId")
     void updateId(long oldId, long newId);
+
+    @Query("SELECT MAX(id) FROM Contact")
+    long maxId();
 }

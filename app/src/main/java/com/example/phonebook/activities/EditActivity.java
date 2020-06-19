@@ -5,14 +5,18 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.phonebook.R;
+import com.example.phonebook.data.Contact;
 import com.example.phonebook.viewmodels.ContactViewModel;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class EditActivity extends BaseChildActivity {
     @Override
@@ -20,7 +24,18 @@ public class EditActivity extends BaseChildActivity {
         super.onCreate(savedInstanceState);
         setChildView(R.layout.activity_edit);
         viewModel = new ViewModelProvider(this).get(ContactViewModel.class);
-        viewModel.load(getIntent().getLongExtra("id", 0));
+        long id = getIntent().getLongExtra("id", 0);
+        final LiveData<Contact> liveData = viewModel.load(getApplicationContext(), id);
+        if (liveData != null) {
+            liveData.observe(this, new Observer<Contact>() {
+                @Override
+                public void onChanged(Contact contact) {
+                    liveData.removeObserver(this);
+                    viewModel.load(contact);
+                    fillInputFields();
+                }
+            });
+        }
 
         final TextInputLayout nameLayout = findViewById(R.id.edit_name_layout);
         final EditText nameField = findViewById(R.id.edit_name_field);
@@ -95,5 +110,23 @@ public class EditActivity extends BaseChildActivity {
                 }
             }
         });
+    }
+
+    private void fillInputFields() {
+        EditText nameField = findViewById(R.id.edit_name_field);
+        nameField.setText(viewModel.getName());
+
+        EditText emailField = findViewById(R.id.edit_email_field);
+        emailField.setText(viewModel.getEmail());
+
+        EditText phoneField = findViewById(R.id.edit_phone_field);
+        phoneField.setText(viewModel.getPhone());
+
+        Calendar calendar = viewModel.getCalendar();
+        if (calendar != null) {
+            EditText dobField = findViewById(R.id.edit_dob_field);
+            DateFormat dateFormat = SimpleDateFormat.getDateInstance();
+            dobField.setText(dateFormat.format(calendar.getTime()));
+        }
     }
 }
