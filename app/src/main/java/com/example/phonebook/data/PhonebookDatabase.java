@@ -26,12 +26,7 @@ public abstract class PhonebookDatabase extends RoomDatabase {
         public void onCreate(@NonNull SupportSQLiteDatabase db) {
             super.onCreate(db);
 
-            AsyncTask.execute(new Runnable() {
-                @Override
-                public void run() {
-                    INSTANCE.contactDao().insert(getSampleData());
-                }
-            });
+            AsyncTask.execute(() -> INSTANCE.contactDao().insert(getSampleData()));
         }
     };
 

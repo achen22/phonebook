@@ -12,6 +12,7 @@ public class PhonebookRepository {
     private static volatile PhonebookRepository INSTANCE;
     private static ContactDao contactDao;
     private static Contact oldContact;
+    private static ContactEndpoint endpoint;
     private static MutableLiveData<Boolean> syncState;
 
     public static PhonebookRepository getInstance(final Context context) {
@@ -21,6 +22,8 @@ public class PhonebookRepository {
                     INSTANCE = new PhonebookRepository();
                     PhonebookDatabase phonebookDatabase = PhonebookDatabase.getInstance(context);
                     contactDao = phonebookDatabase.contactDao();
+                    PhonebookRemote remote = PhonebookRemote.getInstance();
+                    endpoint = remote.getEndpoint();
                 }
             }
         }
@@ -40,39 +43,33 @@ public class PhonebookRepository {
      * @param contact The contact to be saved
      */
     public void save(final Contact contact) {
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (contact.getId() == -1) {
-                    // Insert new contact
-                    long id = contactDao.maxId() + 1;
-                    oldContact = new Contact(id);
-                    contact.setId(id);
-                    contactDao.insert(contact);
-                    // TODO: try to get id assigned via API, otherwise add this to backlog of contacts to add
-                } else {
-                    // Update existing contact
-                    oldContact = contactDao.select(contact.getId());
-                    if (contact.equals(oldContact)) {
-                        oldContact = null;
-                        return;
-                    }
-                    contactDao.update(contact);
-                    // TODO: try to update via API, otherwise add this to backlog of contacts to update
+        AsyncTask.execute(() -> {
+            if (contact.getId() == -1) {
+                // Insert new contact
+                long id = contactDao.maxId() + 1;
+                oldContact = new Contact(id);
+                contact.setId(id);
+                contactDao.insert(contact);
+                // TODO: try to get id assigned via API, otherwise add this to backlog of contacts to add
+            } else {
+                // Update existing contact
+                oldContact = contactDao.select(contact.getId());
+                if (contact.equals(oldContact)) {
+                    oldContact = null;
+                    return;
                 }
+                contactDao.update(contact);
+                // TODO: try to update via API, otherwise add this to backlog of contacts to update
             }
         });
     }
 
     public void delete(final long id) {
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                oldContact = contactDao.select(id);
-                if (oldContact != null) {
-                    contactDao.delete(oldContact);
-                    // TODO: try to delete via API, otherwise add this to backlog of contacts to delete
-                }
+        AsyncTask.execute(() -> {
+            oldContact = contactDao.select(id);
+            if (oldContact != null) {
+                contactDao.delete(oldContact);
+                // TODO: try to delete via API, otherwise add this to backlog of contacts to delete
             }
         });
     }
@@ -85,28 +82,22 @@ public class PhonebookRepository {
         if (oldContact == null) {
             return;
         }
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (oldContact.getName().isEmpty()) {
-                    // undo added contact
-                    contactDao.delete(oldContact);
-                    // TODO: try to undo via API, otherwise add this to backlog of contacts to delete
-                } else {
-                    contactDao.update(oldContact);
-                    // TODO: try to undo via API, otherwise add this to backlog of contacts to update
-                }
+        AsyncTask.execute(() -> {
+            if (oldContact.getName().isEmpty()) {
+                // undo added contact
+                contactDao.delete(oldContact);
+                // TODO: try to undo via API, otherwise add this to backlog of contacts to delete
+            } else {
+                contactDao.update(oldContact);
+                // TODO: try to undo via API, otherwise add this to backlog of contacts to update
             }
         });
     }
 
     public void undoDelete() {
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                contactDao.insert(oldContact);
-                // TODO: try to re-add via API, otherwise add this to backlog of contacts to add
-            }
+        AsyncTask.execute(() -> {
+            contactDao.insert(oldContact);
+            // TODO: try to re-add via API, otherwise add this to backlog of contacts to add
         });
     }
 }

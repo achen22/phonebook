@@ -5,13 +5,10 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.View;
-import android.widget.DatePicker;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.widget.NestedScrollView;
 
 import com.example.phonebook.R;
@@ -49,7 +46,7 @@ public abstract class BaseChildActivity extends AppCompatActivity {
 
     private void applyChildActionBar() {
         setContentView(R.layout.activity_child_base);
-        setSupportActionBar((Toolbar) findViewById(R.id.appbar_child));
+        setSupportActionBar(findViewById(R.id.appbar_child));
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
@@ -57,20 +54,17 @@ public abstract class BaseChildActivity extends AppCompatActivity {
 
     protected void setChildView(int resId) {
         NestedScrollView layout = findViewById(R.id.child_base_scrollview);
-        View content = getLayoutInflater().inflate(resId, layout);
+        getLayoutInflater().inflate(resId, layout);
     }
 
     protected void showDatePickerDialog(@NonNull final EditText editText, Calendar calendar) {
         final Calendar date = calendar != null ? calendar : Calendar.getInstance();
         DatePickerDialog dialog = new DatePickerDialog(editText.getContext(),
-                new DatePickerDialog.OnDateSetListener() {
-                    @Override
-                    public void onDateSet(DatePicker datePicker, int year, int month, int day) {
-                        date.set(year, month, day);
-                        DateFormat format = SimpleDateFormat.getDateInstance();
-                        editText.setText(format.format(date.getTime()));
-                        viewModel.setCalendar(year, month, day);
-                    }
+                (datePicker, year, month, day) -> {
+                    date.set(year, month, day);
+                    DateFormat format = SimpleDateFormat.getDateInstance();
+                    editText.setText(format.format(date.getTime()));
+                    viewModel.setCalendar(year, month, day);
                 },
                 date.get(Calendar.YEAR),
                 date.get(Calendar.MONTH),
@@ -78,15 +72,11 @@ public abstract class BaseChildActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    protected abstract static class OnTextChangedWatcher implements TextWatcher {
+    protected interface OnTextChangedWatcher extends TextWatcher {
         @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-        }
+        default void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
         @Override
-        public void afterTextChanged(Editable s) {
-
-        }
+        default void afterTextChanged(Editable s) {}
     }
 }

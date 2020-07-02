@@ -45,7 +45,7 @@ public class Contact implements Comparable<Contact>, Serializable {
         }
         Contact contact = (Contact) obj;
         return id == contact.id &&
-                (name == contact.name || name != null && name.equals(contact.name)) &&
+                (name == contact.name || name.equals(contact.name)) &&
                 (email == contact.email || email != null && email.equals(contact.email)) &&
                 (phone == contact.phone || phone != null && phone.equals(contact.phone)) &&
                 (dob == contact.dob || dob != null && dob.equals(contact.dob));
@@ -59,6 +59,7 @@ public class Contact implements Comparable<Contact>, Serializable {
         this.id = id;
     }
 
+    @NonNull
     public String getName() {
         return name;
     }

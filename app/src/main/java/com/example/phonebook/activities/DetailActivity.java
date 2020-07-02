@@ -22,7 +22,8 @@ public class DetailActivity extends BaseChildActivity {
         super.onCreate(savedInstanceState);
         setChildView(R.layout.activity_detail);
         long id = getIntent().getLongExtra("id", 0);
-        final LiveData<Contact> liveData = PhonebookRepository.getInstance(getApplicationContext()).get(id);
+        PhonebookRepository repository = PhonebookRepository.getInstance(getApplicationContext());
+        final LiveData<Contact> liveData = repository.get(id);
 
         liveData.observe(this, new Observer<Contact>() {
             @Override
@@ -59,11 +60,6 @@ public class DetailActivity extends BaseChildActivity {
         });
 
         View btnBack = findViewById(R.id.detail_layout_btn);
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
+        btnBack.setOnClickListener(view -> finish());
     }
 }

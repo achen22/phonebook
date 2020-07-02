@@ -86,35 +86,29 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
 
         View item = holder.layout.findViewById(R.id.main_list_item);
         gestureDetector = new GestureDetector(owner, new OnGestureListener(item, contact));
-        item.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                boolean down = event.getActionMasked() == MotionEvent.ACTION_DOWN;
-                boolean up = event.getActionMasked() == MotionEvent.ACTION_UP;
-                if (up || down) {
-                    // onTouch should call View#performClick when a click is detected
-                    if (up) {
-                        v.performClick();
-                    }
-
-                    // get material ripples to show properly
-                    v.setPressed(down);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        v.getForeground().setHotspot(event.getX(), event.getY());
-                    }
+        item.setOnTouchListener((v, event) -> {
+            boolean down = event.getActionMasked() == MotionEvent.ACTION_DOWN;
+            boolean up = event.getActionMasked() == MotionEvent.ACTION_UP;
+            if (up || down) {
+                // onTouch should call View#performClick when a click is detected
+                if (up) {
+                    v.performClick();
                 }
-                return gestureDetector.onTouchEvent(event);
+
+                // get material ripples to show properly
+                v.setPressed(down);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    v.getForeground().setHotspot(event.getX(), event.getY());
+                }
             }
+            return gestureDetector.onTouchEvent(event);
         });
 
         View btnEdit = holder.layout.findViewById(R.id.fab_edit);
-        btnEdit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(owner, EditActivity.class);
-                intent.putExtra("id", contact.getId());
-                owner.startActivityForResult(intent, MainActivity.SAVE_CONTACT_REQUEST);
-            }
+        btnEdit.setOnClickListener(view -> {
+            Intent intent = new Intent(owner, EditActivity.class);
+            intent.putExtra("id", contact.getId());
+            owner.startActivityForResult(intent, MainActivity.SAVE_CONTACT_REQUEST);
         });
     }
 

@@ -5,7 +5,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 
 import com.example.phonebook.data.Contact;
@@ -26,13 +25,10 @@ public class PhonebookViewModel extends ViewModel {
         if (repository == null) {
             repository = PhonebookRepository.getInstance(context);
             phonebook = repository.all();
-            contacts.addSource(phonebook, new Observer<List<Contact>>() {
-                @Override
-                public void onChanged(List<Contact> list) {
-                    if (list != null) {
-                        hashTable = new ContactsHashTable(list, reverse);
-                        updateContactsLiveData();
-                    }
+            contacts.addSource(phonebook, list -> {
+                if (list != null) {
+                    hashTable = new ContactsHashTable(list, reverse);
+                    updateContactsLiveData();
                 }
             });
         }

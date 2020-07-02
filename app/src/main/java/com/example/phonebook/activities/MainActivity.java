@@ -22,9 +22,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.widget.NestedScrollView;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -32,7 +30,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.phonebook.R;
 import com.example.phonebook.data.Contact;
-import com.example.phonebook.data.ContactsHashTable;
 import com.example.phonebook.viewmodels.PhonebookViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -49,21 +46,18 @@ public class MainActivity extends AppCompatActivity {
 
     private int shortAnimTime;
 
-    private View.OnTouchListener startDragOnTouchListener = new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                v.performClick();
-                v = findViewById(R.id.index_cursor);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    v.startDragAndDrop(null, new View.DragShadowBuilder(), null, 0);
-                } else {
-                    v.startDrag(null, new View.DragShadowBuilder(), null, 0);
-                }
-                return true;
+    private View.OnTouchListener startDragOnTouchListener = (v, event) -> {
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            v.performClick();
+            v = findViewById(R.id.index_cursor);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                v.startDragAndDrop(null, new View.DragShadowBuilder(), null, 0);
+            } else {
+                v.startDrag(null, new View.DragShadowBuilder(), null, 0);
             }
-            return false;
+            return true;
         }
+        return false;
     };
 
     @Override
@@ -71,70 +65,49 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setThemeFromSharedPrefs();
         setContentView(R.layout.activity_main);
-        setSupportActionBar((Toolbar) findViewById(R.id.appbar_main));
+        setSupportActionBar(findViewById(R.id.appbar_main));
         viewModel = new ViewModelProvider(this).get(PhonebookViewModel.class);
         shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
         setRecyclerView();
         handleIntent(getIntent());
 
         View deleteBtn = findViewById(R.id.fab_delete);
-        deleteBtn.setOnDragListener(new View.OnDragListener() {
-            @Override
-            public boolean onDrag(View v, DragEvent event) {
-                MainAdapter.ItemState state = (MainAdapter.ItemState) event.getLocalState();
-                if (state == null) { // index drag
-                    return false;
-                }
-                switch (event.getAction()) {
-                    case DragEvent.ACTION_DRAG_STARTED:
-                        // Scroll to top of NestedScrollView to show this button
-                        ((NestedScrollView) v.getParent().getParent()).smoothScrollTo(0, 0);
-                        break;
-                    case DragEvent.ACTION_DRAG_ENTERED:
-                    case DragEvent.ACTION_DRAG_EXITED:
-                        state.setDeleting(event.getAction() == DragEvent.ACTION_DRAG_ENTERED);
-                        break;
-                    case DragEvent.ACTION_DROP:
-                        state.setDeleting(false);
-                        showDeleteSnackBar(state.getContact());
-                        viewModel.delete(state.getContact());
-                        break;
-                }
-                return true;
+        deleteBtn.setOnDragListener((v, event) -> {
+            MainAdapter.ItemState state = (MainAdapter.ItemState) event.getLocalState();
+            if (state == null) { // index drag
+                return false;
             }
+            switch (event.getAction()) {
+                case DragEvent.ACTION_DRAG_STARTED:
+                    // Scroll to top of NestedScrollView to show this button
+                    ((NestedScrollView) v.getParent().getParent()).smoothScrollTo(0, 0);
+                    break;
+                case DragEvent.ACTION_DRAG_ENTERED:
+                case DragEvent.ACTION_DRAG_EXITED:
+                    state.setDeleting(event.getAction() == DragEvent.ACTION_DRAG_ENTERED);
+                    break;
+                case DragEvent.ACTION_DROP:
+                    state.setDeleting(false);
+                    showDeleteSnackBar(state.getContact());
+                    viewModel.delete(state.getContact());
+                    break;
+            }
+            return true;
         });
 
         View searchBtn = findViewById(R.id.fab_search);
-        searchBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                searchMenuItem.expandActionView();
-            }
-        });
+        searchBtn.setOnClickListener(view -> searchMenuItem.expandActionView());
 
         View sortBtn = findViewById(R.id.fab_sort_az);
-        sortBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                viewModel.setReverse(false);
-            }
-        });
+        sortBtn.setOnClickListener(v -> viewModel.setReverse(false));
 
         View reverseSortBtn = findViewById(R.id.fab_sort_za);
-        reverseSortBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                viewModel.setReverse(true);
-            }
-        });
+        reverseSortBtn.setOnClickListener(v -> viewModel.setReverse(true));
 
         View addBtn = findViewById(R.id.fab_add);
-        addBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(), AddActivity.class);
-                startActivityForResult(intent, SAVE_CONTACT_REQUEST);
-            }
+        addBtn.setOnClickListener(view -> {
+            Intent intent = new Intent(view.getContext(), AddActivity.class);
+            startActivityForResult(intent, SAVE_CONTACT_REQUEST);
         });
     }
 
@@ -267,31 +240,28 @@ public class MainActivity extends AppCompatActivity {
         final ViewGroup indexLayout = findViewById(R.id.main_index);
         indexLayout.setOnTouchListener(startDragOnTouchListener);
         final TextView magnifier = findViewById(R.id.index_magnifier);
-        indexLayout.setOnDragListener(new View.OnDragListener() {
-            @Override
-            public boolean onDrag(View v, DragEvent event) {
-                switch (event.getAction()) {
-                    case DragEvent.ACTION_DRAG_STARTED:
-                        if (event.getLocalState() != null) {
-                            return false;
-                        }
-                        magnifier.animate().cancel();
-                        magnifier.setAlpha(1f);
-                        magnifier.setVisibility(View.VISIBLE);
-                        updateMagnifierPosition(currentSection);
-                        break;
-                    case DragEvent.ACTION_DRAG_ENDED:
-                        magnifier.animate().alpha(0f).setDuration(shortAnimTime)
-                                .setListener(new AnimatorListenerAdapter() {
-                                    @Override
-                                    public void onAnimationEnd(Animator animation) {
-                                        magnifier.setVisibility(View.GONE);
-                                    }
-                                });
-                        break;
-                }
-                return true;
+        indexLayout.setOnDragListener((v, event) -> {
+            switch (event.getAction()) {
+                case DragEvent.ACTION_DRAG_STARTED:
+                    if (event.getLocalState() != null) {
+                        return false;
+                    }
+                    magnifier.animate().cancel();
+                    magnifier.setAlpha(1f);
+                    magnifier.setVisibility(View.VISIBLE);
+                    updateMagnifierPosition(currentSection);
+                    break;
+                case DragEvent.ACTION_DRAG_ENDED:
+                    magnifier.animate().alpha(0f).setDuration(shortAnimTime)
+                            .setListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    magnifier.setVisibility(View.GONE);
+                                }
+                            });
+                    break;
             }
+            return true;
         });
 
         final RecyclerView recyclerView = findViewById(R.id.list_main);
@@ -312,65 +282,62 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        viewModel.getContacts(getApplicationContext()).observe(this, new Observer<ContactsHashTable>() {
-            @Override
-            public void onChanged(ContactsHashTable contacts) {
-                final View listLayout = findViewById(R.id.list_main_layout);
-                final View emptyLayout = findViewById(R.id.empty_state_layout);
-                if (contacts.isEmpty()) {
-                    setFabVisible(false);
-                    if (listLayout.getVisibility() != View.GONE
-                            || emptyLayout.getVisibility() != View.VISIBLE) {
-                        // cross-fade to empty state layout
-                        emptyLayout.setVisibility(View.VISIBLE);
-                        emptyLayout.animate().alpha(1f).setDuration(shortAnimTime).setListener(null);
-                        listLayout.animate().alpha(0f).setDuration(shortAnimTime)
-                                .setListener(new AnimatorListenerAdapter() {
-                                    @Override
-                                    public void onAnimationEnd(Animator animation) {
-                                        listLayout.setVisibility(View.GONE);
-                                        emptyLayout.setVisibility(View.VISIBLE);
-                                    }
-                                });
-                    }
-                    if (searchMenuItem != null && searchMenuItem.isActionViewExpanded()) {
-                        // empty result set
-                        findViewById(R.id.empty_result_image).setVisibility(View.VISIBLE);
-                        findViewById(R.id.empty_data_image).setVisibility(View.GONE);
-                        ((TextView) findViewById(R.id.empty_state_text)).setText(R.string.empty_result);
-                    } else {
-                        // empty data set
-                        if (searchMenuItem != null) {
-                            searchMenuItem.setVisible(false);
-                        }
-                        findViewById(R.id.empty_result_image).setVisibility(View.GONE);
-                        findViewById(R.id.empty_data_image).setVisibility(View.VISIBLE);
-                        ((TextView) findViewById(R.id.empty_state_text)).setText(R.string.empty_data);
-                        FloatingActionButton fabAdd = findViewById(R.id.fab_add);
-                        fabAdd.show();
-                    }
-                } else {
-                    setFabVisible(true);
-                    if (searchMenuItem != null) {
-                        searchMenuItem.setVisible(true);
-                    }
-                    if (emptyLayout.getVisibility() != View.GONE
-                            || listLayout.getVisibility() != View.VISIBLE) {
-                        listLayout.setVisibility(View.VISIBLE);
-                        listLayout.animate().alpha(1f).setDuration(shortAnimTime).setListener(null);
-                        // cross-fade to list view layout
-                        emptyLayout.animate().alpha(0f).setDuration(shortAnimTime)
-                                .setListener(new AnimatorListenerAdapter() {
-                                    @Override
-                                    public void onAnimationEnd(Animator animation) {
-                                        emptyLayout.setVisibility(View.GONE);
-                                        listLayout.setVisibility(View.VISIBLE);
-                                    }
-                                });
-                    }
-                    listAdapter.setContacts(contacts);
-                    setIndexView(contacts.getSections());
+        viewModel.getContacts(getApplicationContext()).observe(this, contacts -> {
+            final View listLayout = findViewById(R.id.list_main_layout);
+            final View emptyLayout = findViewById(R.id.empty_state_layout);
+            if (contacts.isEmpty()) {
+                setFabVisible(false);
+                if (listLayout.getVisibility() != View.GONE
+                        || emptyLayout.getVisibility() != View.VISIBLE) {
+                    // cross-fade to empty state layout
+                    emptyLayout.setVisibility(View.VISIBLE);
+                    emptyLayout.animate().alpha(1f).setDuration(shortAnimTime).setListener(null);
+                    listLayout.animate().alpha(0f).setDuration(shortAnimTime)
+                            .setListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    listLayout.setVisibility(View.GONE);
+                                    emptyLayout.setVisibility(View.VISIBLE);
+                                }
+                            });
                 }
+                if (searchMenuItem != null && searchMenuItem.isActionViewExpanded()) {
+                    // empty result set
+                    findViewById(R.id.empty_result_image).setVisibility(View.VISIBLE);
+                    findViewById(R.id.empty_data_image).setVisibility(View.GONE);
+                    ((TextView) findViewById(R.id.empty_state_text)).setText(R.string.empty_result);
+                } else {
+                    // empty data set
+                    if (searchMenuItem != null) {
+                        searchMenuItem.setVisible(false);
+                    }
+                    findViewById(R.id.empty_result_image).setVisibility(View.GONE);
+                    findViewById(R.id.empty_data_image).setVisibility(View.VISIBLE);
+                    ((TextView) findViewById(R.id.empty_state_text)).setText(R.string.empty_data);
+                    FloatingActionButton fabAdd = findViewById(R.id.fab_add);
+                    fabAdd.show();
+                }
+            } else {
+                setFabVisible(true);
+                if (searchMenuItem != null) {
+                    searchMenuItem.setVisible(true);
+                }
+                if (emptyLayout.getVisibility() != View.GONE
+                        || listLayout.getVisibility() != View.VISIBLE) {
+                    listLayout.setVisibility(View.VISIBLE);
+                    listLayout.animate().alpha(1f).setDuration(shortAnimTime).setListener(null);
+                    // cross-fade to list view layout
+                    emptyLayout.animate().alpha(0f).setDuration(shortAnimTime)
+                            .setListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    emptyLayout.setVisibility(View.GONE);
+                                    listLayout.setVisibility(View.VISIBLE);
+                                }
+                            });
+                }
+                listAdapter.setContacts(contacts);
+                setIndexView(contacts.getSections());
             }
         });
     }
@@ -519,31 +486,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void showDeleteSnackBar(final Contact contact) {
         String name = contact.getName();
-        newSnackBar(getString(R.string.item_deleted, name), new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                viewModel.undoDelete();
-            }
-        }).show();
+        newSnackBar(getString(R.string.item_deleted, name), v -> viewModel.undoDelete()).show();
     }
 
     private void showAddSnackBar(final Contact contact) {
         String name = contact.getName();
-        newSnackBar(getString(R.string.item_added, name), new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                viewModel.undoSave();
-            }
-        }).show();
+        newSnackBar(getString(R.string.item_added, name), v -> viewModel.undoSave()).show();
     }
 
     private void showUpdateSnackBar(final Contact contact) {
         String name = contact.getName();
-        newSnackBar(getString(R.string.item_updated, name), new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                viewModel.undoSave();
-            }
-        }).show();
+        newSnackBar(getString(R.string.item_updated, name), v -> viewModel.undoSave()).show();
     }
 }

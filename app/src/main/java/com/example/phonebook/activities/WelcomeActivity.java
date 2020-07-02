@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.view.View;
 import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,25 +28,19 @@ public class WelcomeActivity extends AppCompatActivity {
         gestureDetector = new GestureDetector(this, new WelcomeGestureListener());
 
         Button btnLight = findViewById(R.id.btn_light_theme);
-        btnLight.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                preferences.edit()
-                        .putBoolean(DARK_THEME_KEY, false)
-                        .apply();
-                recreate();
-            }
+        btnLight.setOnClickListener(view -> {
+            preferences.edit()
+                    .putBoolean(DARK_THEME_KEY, false)
+                    .apply();
+            recreate();
         });
 
         Button btnDark = findViewById(R.id.btn_dark_theme);
-        btnDark.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                preferences.edit()
-                        .putBoolean(DARK_THEME_KEY, true)
-                        .apply();
-                recreate();
-            }
+        btnDark.setOnClickListener(view -> {
+            preferences.edit()
+                    .putBoolean(DARK_THEME_KEY, true)
+                    .apply();
+            recreate();
         });
     }
 
