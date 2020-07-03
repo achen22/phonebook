@@ -11,10 +11,10 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 
 public interface ContactEndpoint {
-    @GET("Contact/")
+    @GET("Contact")
     Call<List<Contact>> all();
 
-    @POST("Contact/")
+    @POST("Contact")
     Call<Contact> insert(@Body Contact contact);
 
     @GET("Contact/{id}")

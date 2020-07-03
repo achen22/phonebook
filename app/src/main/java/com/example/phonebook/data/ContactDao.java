@@ -5,28 +5,38 @@ import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Transaction;
 import androidx.room.Update;
 
 import java.util.List;
 
 @Dao
-public interface ContactDao {
+public abstract class ContactDao {
     @Query("SELECT * FROM Contact ORDER BY id")
-    LiveData<List<Contact>> all();
+    abstract LiveData<List<Contact>> all();
 
     @Query("SELECT * FROM Contact WHERE id = :id")
-    LiveData<Contact> get(long id);
+    abstract LiveData<Contact> get(long id);
 
     @Query("SELECT * FROM Contact WHERE id = :id")
-    Contact select(long id);
+    abstract Contact select(long id);
 
-    @Insert void insert(Contact... contacts);
-    @Update void update(Contact... contacts);
-    @Delete void delete(Contact... contacts);
+    @Insert abstract void insert(Contact... contacts);
+    @Update abstract void update(Contact... contacts);
+    @Delete abstract void delete(Contact... contacts);
+
+    @Query("DELETE FROM Contact")
+    abstract void deleteAll();
+
+    @Transaction
+    void replaceAll(List<Contact> contacts) {
+        deleteAll();
+        insert(contacts.toArray(new Contact[0]));
+    }
 
     @Query("UPDATE Contact SET id = :newId WHERE id = :oldId")
-    void updateId(long oldId, long newId);
+    abstract void updateId(long oldId, long newId);
 
     @Query("SELECT MAX(id) FROM Contact")
-    long maxId();
+    abstract long maxId();
 }

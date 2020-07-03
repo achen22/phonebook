@@ -1,33 +1,52 @@
 package com.example.phonebook.data;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 
+import androidx.core.util.Consumer;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import java.util.List;
 
+import retrofit2.Response;
+
+import static android.content.Context.MODE_PRIVATE;
+
 public class PhonebookRepository {
+    private static final String DEFAULT_ERROR_MESSAGE = "Sync failed: Connection error";
+    private static final String LAST_SYNC = "lastSync";
+    private static final String SYNC_STATE = "syncState";
+
     private static volatile PhonebookRepository INSTANCE;
-    private static ContactDao contactDao;
-    private static Contact oldContact;
-    private static ContactEndpoint endpoint;
-    private static MutableLiveData<Boolean> syncState;
+    private ContactDao contactDao;
+    private Contact oldContact;
+    private PhonebookRemote remote;
+    private final SharedPreferences preferences;
+
+    private MutableLiveData<Boolean> syncState;
+    private MutableLiveData<String> syncMessage = new MutableLiveData<>();
 
     public static PhonebookRepository getInstance(final Context context) {
         if (INSTANCE == null) {
             synchronized (PhonebookDatabase.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new PhonebookRepository();
-                    PhonebookDatabase phonebookDatabase = PhonebookDatabase.getInstance(context);
-                    contactDao = phonebookDatabase.contactDao();
-                    PhonebookRemote remote = PhonebookRemote.getInstance();
-                    endpoint = remote.getEndpoint();
+                    INSTANCE = new PhonebookRepository(context);
                 }
             }
         }
         return INSTANCE;
+    }
+
+    private PhonebookRepository(Context context) {
+        remote = PhonebookRemote.getInstance(context);
+        PhonebookDatabase phonebookDatabase = PhonebookDatabase.getInstance(context, this::sync);
+        contactDao = phonebookDatabase.contactDao();
+        preferences = context.getSharedPreferences(
+                context.getApplicationContext().getPackageName(),
+                MODE_PRIVATE);
+        syncState = new MutableLiveData<>(preferences.getBoolean(SYNC_STATE, false));
     }
 
     public LiveData<List<Contact>> all() {
@@ -99,5 +118,32 @@ public class PhonebookRepository {
             contactDao.insert(oldContact);
             // TODO: try to re-add via API, otherwise add this to backlog of contacts to add
         });
+    }
+
+    private void sync(ContactDao dao) {
+        Consumer<List<Contact>> onSuccess = list -> {
+            AsyncTask.execute(() -> {
+                // TODO: push offline changes
+                dao.replaceAll(list);
+                setSyncState(true);
+                // TODO: update last sync time in SharedPrefs
+            });
+        };
+
+        Consumer<Response<?>> onFailure = response -> {
+            setSyncState(false);
+            syncMessage.postValue(response == null ? DEFAULT_ERROR_MESSAGE : response.message());
+        };
+
+        remote.all(onSuccess, onFailure);
+    }
+
+    public void sync() {
+        sync(contactDao);
+    }
+
+    private void setSyncState(boolean synced) {
+        syncState.postValue(synced);
+        preferences.edit().putBoolean(SYNC_STATE, synced).apply();
     }
 }
