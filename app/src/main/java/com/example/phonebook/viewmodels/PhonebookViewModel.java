@@ -20,6 +20,7 @@ public class PhonebookViewModel extends ViewModel {
     private boolean reverse = false;
     @NonNull private String search = "";
     private MediatorLiveData<ContactsHashTable> contacts = new MediatorLiveData<>();
+    private boolean nextMessageVisible = false;
 
     public LiveData<ContactsHashTable> getContacts(Context context) {
         if (repository == null) {
@@ -80,5 +81,22 @@ public class PhonebookViewModel extends ViewModel {
 
     public void undoDelete() {
         repository.undoDelete();
+    }
+
+    public void sync() {
+        repository.sync();
+        nextMessageVisible = true;
+    }
+
+    public boolean isNextMessageVisible() {
+        return nextMessageVisible;
+    }
+
+    public void consumeMessage() {
+        nextMessageVisible = false;
+    }
+
+    public LiveData<String> getSyncMessage() {
+        return repository.getSyncMessage();
     }
 }

@@ -25,4 +25,5 @@
     <string name="name_cannot_be_empty_error">Name cannot be empty</string>
     <string name="empty_data">There\'s nothing here</string>
     <string name="empty_result">No matching results</string>
+    <string name="menu_sync">Sync now</string>
 </resources>

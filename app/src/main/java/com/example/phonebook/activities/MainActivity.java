@@ -27,6 +27,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.phonebook.R;
 import com.example.phonebook.data.Contact;
@@ -68,7 +69,9 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(findViewById(R.id.appbar_main));
         viewModel = new ViewModelProvider(this).get(PhonebookViewModel.class);
         shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+        setIndexLayout();
         setRecyclerView();
+        setSwipeRefresh();
         handleIntent(getIntent());
 
         View deleteBtn = findViewById(R.id.fab_delete);
@@ -120,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
         searchMenuItem = menu.findItem(R.id.action_search);
         final SearchView searchView = (SearchView) searchMenuItem.getActionView();
         setSearchViewStyle(searchView);
+        assert searchManager != null;
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         searchView.setIconifiedByDefault(false);
 
@@ -176,7 +180,13 @@ public class MainActivity extends AppCompatActivity {
                         .putBoolean(WelcomeActivity.DARK_THEME_KEY, !useDarkTheme)
                         .apply();
                 recreate();
-                break;
+                return true;
+
+            case R.id.action_sync:
+                SwipeRefreshLayout swipeRefreshLayout = findViewById(R.id.list_main_refresh);
+                swipeRefreshLayout.setRefreshing(true);
+                viewModel.sync();
+                return true;
 
             case R.id.action_search:
                 break;
@@ -208,6 +218,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == SAVE_CONTACT_REQUEST && resultCode == RESULT_OK) {
             assert data != null;
             Contact contact = (Contact) data.getSerializableExtra("contact");
+            assert contact != null;
             boolean added = contact.getId() == -1;
 
             viewModel.save(contact);
@@ -236,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
         setTheme(useDarkTheme ? R.style.DarkTheme : R.style.AppTheme);
     }
 
-    private void setRecyclerView() {
+    private void setIndexLayout() {
         final ViewGroup indexLayout = findViewById(R.id.main_index);
         indexLayout.setOnTouchListener(startDragOnTouchListener);
         final TextView magnifier = findViewById(R.id.index_magnifier);
@@ -249,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
                     magnifier.animate().cancel();
                     magnifier.setAlpha(1f);
                     magnifier.setVisibility(View.VISIBLE);
-                    updateMagnifierPosition(currentSection);
+                    updateIndexMagnifier(currentSection);
                     break;
                 case DragEvent.ACTION_DRAG_ENDED:
                     magnifier.animate().alpha(0f).setDuration(shortAnimTime)
@@ -263,7 +274,18 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         });
+    }
 
+    private void setSwipeRefresh() {
+        SwipeRefreshLayout swipeRefreshLayout = findViewById(R.id.list_main_refresh);
+        swipeRefreshLayout.setOnRefreshListener(viewModel::sync);
+        viewModel.getSyncMessage().observe(this, message -> {
+            swipeRefreshLayout.setRefreshing(false);
+            showSyncMessage(message);
+        });
+    }
+
+    private void setRecyclerView() {
         final RecyclerView recyclerView = findViewById(R.id.list_main);
         final LinearLayoutManager recyclerManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(recyclerManager);
@@ -278,7 +300,7 @@ public class MainActivity extends AppCompatActivity {
                 if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
                     listAdapter.animateClose();
                 }
-                updateIndex();
+                updateIndexCursor();
             }
         });
 
@@ -337,12 +359,12 @@ public class MainActivity extends AppCompatActivity {
                             });
                 }
                 listAdapter.setContacts(contacts);
-                setIndexView(contacts.getSections());
+                updateIndexLayout(contacts.getSections());
             }
         });
     }
 
-    private void setIndexView(final String[] sections) {
+    private void updateIndexLayout(final String[] sections) {
         final ViewGroup indexLayout = findViewById(R.id.main_index);
 
         // Set number of child views
@@ -363,8 +385,8 @@ public class MainActivity extends AppCompatActivity {
 
                             if (event.getAction() == DragEvent.ACTION_DRAG_ENTERED && !listAdapter.isSectionEmpty(section)) {
                                 scrollTo(listAdapter.getPositionForSection(section));
-                                updateMagnifierPosition(section);
-                                updateIndex();
+                                updateIndexMagnifier(section);
+                                updateIndexCursor();
                             }
                             return true;
                         }
@@ -387,7 +409,7 @@ public class MainActivity extends AppCompatActivity {
             view.setText(sections[i]);
             view.setAlpha(listAdapter.isSectionEmpty(i) ? 0.4f : 1f);
         }
-        updateIndex();
+        updateIndexCursor();
     }
 
     private void handleIntent(Intent intent) {
@@ -440,7 +462,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void updateIndex() {
+    public void updateIndexCursor() {
         ViewGroup indexLayout = findViewById(R.id.main_index);
         if (indexLayout.getChildCount() == 0) {
             return;
@@ -469,7 +491,7 @@ public class MainActivity extends AppCompatActivity {
         cursor.animate().translationY(y - cursor.getPivotY()).setDuration(shortAnimTime);
     }
 
-    public void updateMagnifierPosition(int index) {
+    public void updateIndexMagnifier(int index) {
         ViewGroup indexLayout = findViewById(R.id.main_index);
         TextView indexView = (TextView) indexLayout.getChildAt(index);
         float y = indexView.getY() + (indexView.getPivotY() + indexView.getBaseline()) / 2;
@@ -478,24 +500,44 @@ public class MainActivity extends AppCompatActivity {
         magnifier.setText(indexView.getText());
     }
 
-    private Snackbar newSnackBar(String message, View.OnClickListener listener) {
+    private Snackbar makeUndoSnackBar(String message, View.OnClickListener listener) {
         return Snackbar.make(findViewById(R.id.layout_main), message, Snackbar.LENGTH_LONG)
                 .setAction(R.string.undo, listener)
                 .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE);
     }
 
-    private void showDeleteSnackBar(final Contact contact) {
+    private void showDeleteSnackBar(Contact contact) {
         String name = contact.getName();
-        newSnackBar(getString(R.string.item_deleted, name), v -> viewModel.undoDelete()).show();
+        makeUndoSnackBar(getString(R.string.item_deleted, name), v -> viewModel.undoDelete()).show();
     }
 
-    private void showAddSnackBar(final Contact contact) {
+    private void showAddSnackBar(Contact contact) {
         String name = contact.getName();
-        newSnackBar(getString(R.string.item_added, name), v -> viewModel.undoSave()).show();
+        makeUndoSnackBar(getString(R.string.item_added, name), v -> viewModel.undoSave()).show();
     }
 
-    private void showUpdateSnackBar(final Contact contact) {
+    private void showUpdateSnackBar(Contact contact) {
         String name = contact.getName();
-        newSnackBar(getString(R.string.item_updated, name), v -> viewModel.undoSave()).show();
+        makeUndoSnackBar(getString(R.string.item_updated, name), v -> viewModel.undoSave()).show();
+    }
+
+    private void showSyncMessage(String message) {
+        if (message == null || !viewModel.isNextMessageVisible()) {
+            return;
+        } else if (message.isEmpty()) {
+            viewModel.consumeMessage();
+            return;
+        }
+
+        Snackbar.make(findViewById(R.id.layout_main), message, Snackbar.LENGTH_LONG)
+                .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE)
+                .addCallback(new Snackbar.Callback() {
+                    @Override
+                    public void onDismissed(Snackbar transientBottomBar, int event) {
+                        super.onDismissed(transientBottomBar, event);
+                        viewModel.consumeMessage();
+                    }
+                })
+                .show();
     }
 }

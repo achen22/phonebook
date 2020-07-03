@@ -70,7 +70,7 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MainViewHolder
     public void onBindViewHolder(@NonNull MainViewHolder holder, int position) {
         final Contact contact = contacts.get(position);
         final GestureDetector gestureDetector;
-        owner.updateIndex();
+        owner.updateIndexCursor();
 
         ((TextView) holder.layout.findViewById(R.id.item_name_text)).setText(contact.getName());
         ((TextView) holder.layout.findViewById(R.id.item_email_text)).setText(contact.getEmail());

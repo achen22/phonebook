@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.Consumer;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -15,9 +16,9 @@ import retrofit2.Response;
 import static android.content.Context.MODE_PRIVATE;
 
 public class PhonebookRepository {
-    private static final String DEFAULT_ERROR_MESSAGE = "Sync failed: Connection error";
+    private static final String DEFAULT_ERROR_MESSAGE = "Connection error";
     private static final String LAST_SYNC = "lastSync";
-    private static final String SYNC_STATE = "syncState";
+    private static final String ONLINE_MODE = "syncChanges";
 
     private static volatile PhonebookRepository INSTANCE;
     private ContactDao contactDao;
@@ -25,7 +26,7 @@ public class PhonebookRepository {
     private PhonebookRemote remote;
     private final SharedPreferences preferences;
 
-    private MutableLiveData<Boolean> syncState;
+    private boolean onlineMode;
     private MutableLiveData<String> syncMessage = new MutableLiveData<>();
 
     public static PhonebookRepository getInstance(final Context context) {
@@ -46,7 +47,7 @@ public class PhonebookRepository {
         preferences = context.getSharedPreferences(
                 context.getApplicationContext().getPackageName(),
                 MODE_PRIVATE);
-        syncState = new MutableLiveData<>(preferences.getBoolean(SYNC_STATE, false));
+        onlineMode = preferences.getBoolean(ONLINE_MODE, false);
     }
 
     public LiveData<List<Contact>> all() {
@@ -61,29 +62,37 @@ public class PhonebookRepository {
      * Saves changes made to a new or existing contact.
      * @param contact The contact to be saved
      */
-    public void save(final Contact contact) {
+    public void save(Contact contact) {
+        if (contact.getId() == -1) {
+            insert(contact);
+        } else {
+            update(contact);
+        }
+    }
+
+    private void insert(Contact contact) {
         AsyncTask.execute(() -> {
-            if (contact.getId() == -1) {
-                // Insert new contact
-                long id = contactDao.maxId() + 1;
-                oldContact = new Contact(id);
-                contact.setId(id);
-                contactDao.insert(contact);
-                // TODO: try to get id assigned via API, otherwise add this to backlog of contacts to add
-            } else {
-                // Update existing contact
-                oldContact = contactDao.select(contact.getId());
-                if (contact.equals(oldContact)) {
-                    oldContact = null;
-                    return;
-                }
-                contactDao.update(contact);
-                // TODO: try to update via API, otherwise add this to backlog of contacts to update
-            }
+            long id = contactDao.maxId() + 1;
+            oldContact = new Contact(id);
+            contact.setId(id);
+            contactDao.insert(contact);
+            // TODO: try to get id assigned via API, otherwise add this to backlog of contacts to add
         });
     }
 
-    public void delete(final long id) {
+    private void update(Contact contact) {
+        AsyncTask.execute(() -> {
+            oldContact = contactDao.select(contact.getId());
+            if (contact.equals(oldContact)) {
+                oldContact = null;
+                return;
+            }
+            contactDao.update(contact);
+            // TODO: try to update via API, otherwise add this to backlog of contacts to update
+        });
+    }
+
+    public void delete(long id) {
         AsyncTask.execute(() -> {
             oldContact = contactDao.select(id);
             if (oldContact != null) {
@@ -120,19 +129,35 @@ public class PhonebookRepository {
         });
     }
 
+    public LiveData<String> getSyncMessage() {
+        return syncMessage;
+    }
+
+    // must be run on UI thread
+    private void postSyncMessage(@NonNull String message) {
+        syncMessage.setValue(null);
+        syncMessage.postValue(message);
+    }
+
     private void sync(ContactDao dao) {
+        if (!remote.isConnected()) {
+            setOnlineMode(false);
+            postSyncMessage("No internet connection");
+        }
+
         Consumer<List<Contact>> onSuccess = list -> {
             AsyncTask.execute(() -> {
                 // TODO: push offline changes
                 dao.replaceAll(list);
-                setSyncState(true);
+                setOnlineMode(true);
                 // TODO: update last sync time in SharedPrefs
             });
+            postSyncMessage("");
         };
 
         Consumer<Response<?>> onFailure = response -> {
-            setSyncState(false);
-            syncMessage.postValue(response == null ? DEFAULT_ERROR_MESSAGE : response.message());
+            setOnlineMode(false);
+            postSyncMessage(response == null ? DEFAULT_ERROR_MESSAGE : response.message());
         };
 
         remote.all(onSuccess, onFailure);
@@ -142,8 +167,8 @@ public class PhonebookRepository {
         sync(contactDao);
     }
 
-    private void setSyncState(boolean synced) {
-        syncState.postValue(synced);
-        preferences.edit().putBoolean(SYNC_STATE, synced).apply();
+    private void setOnlineMode(boolean onlineMode) {
+        this.onlineMode = onlineMode;
+        preferences.edit().putBoolean(ONLINE_MODE, onlineMode).apply();
     }
 }
