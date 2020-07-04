@@ -51,18 +51,18 @@ public class PhonebookRemote {
     /**
      * Logs a message and posts it to LiveData. Use this to notify Observers when a Call fails.
      * @param message the message to log and post to LiveData
-     * @return true if message is empty, false otherwise
+     * @return false if message is empty, true otherwise
      */
     private boolean postMessage(String message) {
         this.message.postValue(message);
         if (message == null || message.isEmpty()) {
-            return true;
+            return false;
         }
         Log.i(TAG, message);
-        return false;
+        return true;
     }
 
-    private boolean hasInternet() {
+    private boolean hasNetworkIssue() {
         if (connectivityManager == null) {
             return postMessage("connectivityManager is null");
         }
@@ -78,9 +78,9 @@ public class PhonebookRemote {
             if (capabilities == null) {
                 return postMessage("Unknown network");
             } else if (!capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-                return postMessage("Unknown network");
+                return postMessage("Network cannot reach internet");
             }
-        } else {
+        } else { // android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M
             NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
             if (activeNetwork == null) {
                 return postMessage("No active network");
@@ -89,24 +89,24 @@ public class PhonebookRemote {
             }
         }
 
-        return true;
+        return false;
     }
 
     /**
-     * Check if endpoint server responds successfully.
-     * @return true if server response if successful, false otherwise
+     * Check if API server responds successfully.
+     * @return true if server response is successful, false otherwise
      */
-    private boolean head() {
+    public boolean canConnectToBaseUrl() {
         try {
             return ENDPOINT.head().execute().isSuccessful();
         } catch (IOException e) {
-            Log.e(TAG, "isConnected: ", e);
+            Log.e(TAG, "canConnectToBaseUrl: ", e);
             return false;
         }
     }
 
     public void all(@NonNull Consumer<List<Contact>> onSuccess) {
-        if (!hasInternet()) {
+        if (hasNetworkIssue()) {
             return;
         }
 
@@ -129,7 +129,7 @@ public class PhonebookRemote {
     }
 
     public void insert(@NonNull Contact contact, @NonNull Consumer<Contact> onSuccess) {
-        if (!hasInternet()) {
+        if (hasNetworkIssue()) {
             return;
         }
 
@@ -152,29 +152,33 @@ public class PhonebookRemote {
     }
 
     public void update(Contact contact) {
-        if (!hasInternet()) {
+        if (hasNetworkIssue()) {
             return;
         }
 
     }
 
-    public void delete(long id) {
-        if (!hasInternet()) {
+    public void delete(long id, @NonNull Consumer<Contact> onSuccess) {
+        if (hasNetworkIssue()) {
             return;
         }
 
-    }
+        ENDPOINT.delete(id).enqueue(new Callback<Contact>() {
+            @Override
+            public void onResponse(@NonNull Call<Contact> call,
+                                   @NonNull Response<Contact> response) {
+                if (response.isSuccessful()) {
+                    onSuccess.accept(response.body());
+                } else if (!canConnectToBaseUrl()) {
+                    onBadResponse("delete", response);
+                }
+            }
 
-    private void onFailure(String method, Throwable t) {
-        onFailure(method, t, null);
-    }
-
-    private void onFailure(String method, Throwable t, String message) {
-        String prefix = method == null || method.isEmpty()
-                ? ""
-                : method + "().";
-        Log.e(TAG, prefix + "onFailure: ", t);
-        postMessage(message);
+            @Override
+            public void onFailure(@NonNull Call<Contact> call, @NonNull Throwable t) {
+                PhonebookRemote.this.onFailure("delete", t);
+            }
+        });
     }
 
     private void onBadResponse(String method, Response<?> response) {
@@ -188,6 +192,18 @@ public class PhonebookRemote {
         String msg = String.format("%sonBadResponse: get [%d] %s from %s",
                 prefix, response.code(), response.message(), response.raw().request().url());
         Log.e(TAG, msg);
+        postMessage(message);
+    }
+
+    private void onFailure(String method, Throwable t) {
+        onFailure(method, t, null);
+    }
+
+    private void onFailure(String method, Throwable t, String message) {
+        String prefix = method == null || method.isEmpty()
+                ? ""
+                : method + "().";
+        Log.e(TAG, prefix + "onFailure: ", t);
         postMessage(message);
     }
 }

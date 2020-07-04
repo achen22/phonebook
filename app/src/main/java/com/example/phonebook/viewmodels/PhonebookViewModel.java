@@ -67,12 +67,12 @@ public class PhonebookViewModel extends ViewModel {
         repository.save(contact);
     }
 
-    public void delete(long id) {
-        repository.delete(id);
+    public Runnable delete(long id) {
+        return repository.delete(id);
     }
 
-    public void delete(Contact contact) {
-        repository.delete(contact);
+    public Runnable delete(Contact contact) {
+        return repository.delete(contact);
     }
 
     public void undoSave() {
