@@ -27,7 +27,7 @@ public class PhonebookRepository {
 
     private final PhonebookRemote remote;
     /** This gets called when an error occurs during a remote operation  */
-    private Consumer<String> remoteErrorConsumer = null;
+    private Consumer<String> onFailure = null;
 
     private final SharedPreferences preferences;
     private boolean onlineMode;
@@ -48,10 +48,9 @@ public class PhonebookRepository {
         remote = PhonebookRemote.getInstance(context);
         remote.getMessage().observeForever(errorMessage -> {
             setOnlineMode(false);
-            if (remoteErrorConsumer != null) {
-                Consumer<String> consumer = remoteErrorConsumer;
-                remoteErrorConsumer = null;
-                consumer.accept(errorMessage);
+            if (onFailure != null) {
+                onFailure.accept(errorMessage);
+                onFailure = null;
             }
         });
 
@@ -80,6 +79,8 @@ public class PhonebookRepository {
         Consumer<List<Contact>> onSuccess = list -> {
             AsyncTask.execute(() -> {
                 // TODO: push offline changes
+                preferences.edit().remove(DELETED_IDS).remove(CHANGED_IDS).apply();
+
                 dao.replaceAll(list);
                 setOnlineMode(true);
 
@@ -88,13 +89,13 @@ public class PhonebookRepository {
             });
             postSyncMessage(null);
         };
-
-        remoteErrorConsumer = this::postSyncMessage;
+        onFailure = this::postSyncMessage;
         remote.all(onSuccess);
     }
 
     /**
-     * Saves changes made to a new or existing contact.
+     * Saves changes made to a new or existing contact. If online mode if active, this method
+     * returns a Runnable to push the changes to the remote database.
      * @param contact The contact to be saved
      */
     public void save(Contact contact) {
@@ -111,11 +112,49 @@ public class PhonebookRepository {
             oldContact = new Contact(id);
             contact.setId(id);
             contactDao.insert(contact);
-            // TODO: try to get id assigned via API, otherwise add this to backlog of contacts to add
+
+            addToBacklog(CHANGED_IDS, id);
+            if (!preferences.contains(LAST_SYNC_ID)) {
+                preferences.edit().putLong(LAST_SYNC_ID, id - 1).apply();
+            }
+
+            if (onlineMode) {
+                insertRemote(contact);
+            }
         });
     }
 
+    private void insertRemote(Contact contact) {
+        if (!onlineMode || !backlogContains(CHANGED_IDS, oldContact.getId())) {
+            onlineMode = false;
+            return;
+        }
+
+        long id = contact.getId();
+        Consumer<Contact> onSuccess = response -> {
+            onFailure = null;
+
+            AsyncTask.execute(() -> {
+                contactDao.updateId(id, response.getId());
+                preferences.edit().remove(LAST_SYNC_ID).apply();
+                removeFromBacklog(CHANGED_IDS, id);
+
+                // notify others of updated id
+                oldContact.setId(response.getId());
+                if (backlogContains(DELETED_IDS, id)) {
+                    removeFromBacklog(DELETED_IDS, id);
+                    addToBacklog(DELETED_IDS, response.getId());
+                }
+            });
+        };
+        onFailure = message -> {
+            setOnlineMode(false);
+        };
+        remote.insert(contact, onSuccess);
+    }
+
     private void update(Contact contact) {
+        addToBacklog(CHANGED_IDS, contact.getId());
         AsyncTask.execute(() -> {
             oldContact = contactDao.select(contact.getId());
             if (contact.equals(oldContact)) {
@@ -123,8 +162,34 @@ public class PhonebookRepository {
                 return;
             }
             contactDao.update(contact);
-            // TODO: try to update via API, otherwise add this to backlog of contacts to update
+
+            if (!preferences.contains(LAST_SYNC_ID)) {
+                preferences.edit().putLong(LAST_SYNC_ID, contactDao.maxId()).apply();
+            }
+
+            if (onlineMode) {
+                updateRemote(contact);
+            }
         });
+    }
+
+    private void updateRemote(Contact contact) {
+        if (!onlineMode || !backlogContains(CHANGED_IDS, oldContact.getId())) {
+            return;
+        }
+
+        Runnable onSuccess = () -> {
+            onFailure = null;
+            preferences.edit().remove(LAST_SYNC_ID).apply();
+            removeFromBacklog(CHANGED_IDS, contact.getId());
+        };
+        Runnable onNotFound = () -> {
+            insertRemote(contact);
+        };
+        onFailure = message -> {
+            setOnlineMode(false);
+        };
+        remote.update(contact, onSuccess, onNotFound);
     }
 
     /**
@@ -146,11 +211,14 @@ public class PhonebookRepository {
      * null otherwise
      */
     public Runnable delete(long id) {
+        addToBacklog(DELETED_IDS, id);
         AsyncTask.execute(() -> {
             oldContact = contactDao.select(id);
             if (oldContact != null) {
+                if (!preferences.contains(LAST_SYNC_ID)) {
+                    preferences.edit().putLong(LAST_SYNC_ID, contactDao.maxId()).apply();
+                }
                 contactDao.delete(oldContact);
-                deleteLater(id);
             }
         });
 
@@ -165,84 +233,70 @@ public class PhonebookRepository {
     }
 
     private void deleteRemote(long id) {
-        if (!onlineMode) {
+        if (!onlineMode || !backlogContains(DELETED_IDS, oldContact.getId())) {
             return;
         }
 
         Consumer<Contact> onSuccess = contact -> {
-            remoteErrorConsumer = null;
-            removeDeleteLater(id);
+            onFailure = null;
+            preferences.edit().remove(LAST_SYNC_ID).apply();
+            removeFromBacklog(DELETED_IDS, id);
         };
-        remoteErrorConsumer = s -> {
+        onFailure = message -> {
             setOnlineMode(false);
         };
         remote.delete(id, onSuccess);
-    }
-
-    private void saveLater(long id) {
-        Set<String> strings = preferences.getStringSet(CHANGED_IDS, new HashSet<>());
-        assert strings != null;
-        strings.add(String.valueOf(id));
-        preferences.edit().putStringSet(CHANGED_IDS, strings).apply();
-    }
-
-    private void removeSaveLater(long id) {
-        if (onlineMode) {
-            preferences.edit().remove(CHANGED_IDS).apply();
-            return;
-        }
-
-        Set<String> strings = preferences.getStringSet(CHANGED_IDS, new HashSet<>());
-        assert strings != null;
-        if (strings.remove(String.valueOf(id))) {
-            preferences.edit().putStringSet(CHANGED_IDS, strings).apply();
-        }
-    }
-
-    private void deleteLater(long id) {
-        Set<String> strings = preferences.getStringSet(DELETED_IDS, new HashSet<>());
-        assert strings != null;
-        strings.add(String.valueOf(id));
-        preferences.edit().putStringSet(DELETED_IDS, strings).apply();
-    }
-
-    private void removeDeleteLater(long id) {
-        if (onlineMode) {
-            preferences.edit().remove(DELETED_IDS).apply();
-            return;
-        }
-
-        Set<String> strings = preferences.getStringSet(DELETED_IDS, new HashSet<>());
-        assert strings != null;
-        if (strings.remove(String.valueOf(id))) {
-            preferences.edit().putStringSet(DELETED_IDS, strings).apply();
-        }
     }
 
     public void undoSave() {
         if (oldContact == null) {
             return;
         }
+        long id = oldContact.getId();
         AsyncTask.execute(() -> {
             if (oldContact.getName().isEmpty()) {
-                // undo added contact
-                contactDao.delete(oldContact);
-                // TODO: try to undo via API, otherwise add this to backlog of contacts to delete
+                // delete added contact
+                removeFromBacklog(CHANGED_IDS, id);
+                Runnable remoteDelete = delete(id);
+                if (remoteDelete != null) {
+                    remoteDelete.run();
+                }
             } else {
-                contactDao.update(oldContact);
-                // TODO: try to undo via API, otherwise add this to backlog of contacts to update
+                // undo updated contact
+                update(oldContact);
             }
         });
     }
 
     public void undoDelete() {
-        if (oldContact == null) {
+        if (oldContact == null || !backlogContains(DELETED_IDS, oldContact.getId())) {
             return;
         }
         AsyncTask.execute(() -> {
             contactDao.insert(oldContact);
-            // TODO: try to re-add via API, otherwise add this to backlog of contacts to add
+            removeFromBacklog(DELETED_IDS, oldContact.getId());
         });
+    }
+
+    private void addToBacklog(String backlog, long id) {
+        Set<String> strings = preferences.getStringSet(backlog, new HashSet<>());
+        if (strings == null) {
+            strings = new HashSet<>();
+        }
+        strings.add(String.valueOf(id));
+        preferences.edit().putStringSet(backlog, strings).apply();
+    }
+
+    private void removeFromBacklog(String backlog, long id) {
+        Set<String> strings = preferences.getStringSet(backlog, new HashSet<>());
+        if (strings != null && strings.remove(String.valueOf(id))) {
+            preferences.edit().putStringSet(backlog, strings).apply();
+        }
+    }
+
+    private boolean backlogContains(String backlog, long id) {
+        Set<String> strings = preferences.getStringSet(backlog, null);
+        return strings != null && strings.contains(String.valueOf(id));
     }
 
     public LiveData<String> getSyncMessage() {
@@ -262,7 +316,7 @@ public class PhonebookRepository {
         this.onlineMode = onlineMode;
         if (onlineMode) {
             preferences.edit().remove(LAST_SYNC_ID).apply();
-        } else {
+        } else if (!preferences.contains(LAST_SYNC_ID)) {
             AsyncTask.execute(() -> {
                 long id = contactDao.maxId();
                 if (!preferences.contains(LAST_SYNC_ID)) {

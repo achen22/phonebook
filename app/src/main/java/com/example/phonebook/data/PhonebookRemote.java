@@ -5,6 +5,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -93,7 +94,7 @@ public class PhonebookRemote {
     }
 
     /**
-     * Check if API server responds successfully.
+     * Check if API server responds successfully. Cannot be run on UI thread.
      * @return true if server response is successful, false otherwise
      */
     public boolean canConnectToBaseUrl() {
@@ -117,13 +118,13 @@ public class PhonebookRemote {
                 if (response.isSuccessful()) {
                     onSuccess.accept(response.body());
                 } else {
-                    onBadResponse("all", response, "Server response error");
+                    onBadResponse("all", response);
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<List<Contact>> call, @NonNull Throwable t) {
-                PhonebookRemote.this.onFailure("all", t, "Communication error");
+                PhonebookRemote.this.onFailure("all", t);
             }
         });
     }
@@ -151,11 +152,32 @@ public class PhonebookRemote {
         });
     }
 
-    public void update(Contact contact) {
+    public void update(Contact contact, @NonNull Runnable onSuccess, Runnable onNotFound) {
         if (hasNetworkIssue()) {
             return;
         }
 
+        ENDPOINT.update(contact.getId(), contact).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.isSuccessful()) {
+                    onSuccess.run();
+                } else {
+                    AsyncTask.execute(() -> {
+                        if (!canConnectToBaseUrl()) {
+                            onBadResponse("update", response);
+                        } else if (response.code() == 404 && onNotFound != null) {
+                            onNotFound.run();
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                PhonebookRemote.this.onFailure("update", t);
+            }
+        });
     }
 
     public void delete(long id, @NonNull Consumer<Contact> onSuccess) {
@@ -169,8 +191,12 @@ public class PhonebookRemote {
                                    @NonNull Response<Contact> response) {
                 if (response.isSuccessful()) {
                     onSuccess.accept(response.body());
-                } else if (!canConnectToBaseUrl()) {
-                    onBadResponse("delete", response);
+                } else {
+                    AsyncTask.execute(() -> {
+                        if (!canConnectToBaseUrl()) {
+                            onBadResponse("delete", response);
+                        }
+                    });
                 }
             }
 
@@ -182,28 +208,20 @@ public class PhonebookRemote {
     }
 
     private void onBadResponse(String method, Response<?> response) {
-        onBadResponse(method, response, null);
-    }
-
-    private void onBadResponse(String method, Response<?> response, String message) {
         String prefix = method == null || method.isEmpty()
                 ? ""
                 : method + "().";
         String msg = String.format("%sonBadResponse: get [%d] %s from %s",
                 prefix, response.code(), response.message(), response.raw().request().url());
         Log.e(TAG, msg);
-        postMessage(message);
+        postMessage("Server response error");
     }
 
     private void onFailure(String method, Throwable t) {
-        onFailure(method, t, null);
-    }
-
-    private void onFailure(String method, Throwable t, String message) {
         String prefix = method == null || method.isEmpty()
                 ? ""
                 : method + "().";
         Log.e(TAG, prefix + "onFailure: ", t);
-        postMessage(message);
+        postMessage("Communication error");
     }
 }

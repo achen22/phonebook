@@ -12,7 +12,7 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 
 public interface ContactEndpoint {
-    @HEAD
+    @HEAD(".")
     Call<Void> head();
 
     @GET("Contact/")

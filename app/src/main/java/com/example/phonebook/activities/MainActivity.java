@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.DragEvent;
@@ -502,38 +501,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private Snackbar makeUndoSnackBar(String message,
-                                      Runnable onDismiss,
                                       View.OnClickListener onUndo) {
         return Snackbar.make(findViewById(R.id.layout_main), message, Snackbar.LENGTH_LONG)
                 .setAction(R.string.undo, onUndo)
-                .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE)
+                .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE);
+    }
+
+    private void showDeleteSnackBar(Contact contact, Runnable onDismiss) {
+        String name = contact.getName();
+        String message = getString(R.string.item_deleted, name);
+        View.OnClickListener onUndo = v -> viewModel.undoDelete();
+        makeUndoSnackBar(message, onUndo)
                 .addCallback(new Snackbar.Callback() {
                     @Override
                     public void onDismissed(Snackbar transientBottomBar, int event) {
                         super.onDismissed(transientBottomBar, event);
                         if (event != DISMISS_EVENT_ACTION && onDismiss != null) {
-                            AsyncTask.execute(onDismiss);
+                            onDismiss.run();
                         }
                     }
-                });
-    }
-
-    private void showDeleteSnackBar(Contact contact, Runnable onDismiss) {
-        String name = contact.getName();
-        makeUndoSnackBar(getString(R.string.item_deleted, name),
-                onDismiss,
-                v -> viewModel.undoDelete()
-        ).show();
+                })
+                .show();
     }
 
     private void showAddSnackBar(Contact contact) {
         String name = contact.getName();
-        makeUndoSnackBar(getString(R.string.item_added, name), null, v -> viewModel.undoSave()).show();
+        String message = getString(R.string.item_added, name);
+        View.OnClickListener onUndo = v -> viewModel.undoSave();
+        makeUndoSnackBar(message, onUndo).show();
     }
 
     private void showUpdateSnackBar(Contact contact) {
         String name = contact.getName();
-        makeUndoSnackBar(getString(R.string.item_updated, name), null, v -> viewModel.undoSave()).show();
+        String message = getString(R.string.item_updated, name);
+        View.OnClickListener onUndo = v -> viewModel.undoSave();
+        makeUndoSnackBar(message, onUndo).show();
     }
 
     private void showSyncMessage(String message) {
