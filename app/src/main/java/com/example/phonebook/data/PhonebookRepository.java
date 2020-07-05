@@ -3,6 +3,7 @@ package com.example.phonebook.data;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Handler;
 
 import androidx.core.util.Consumer;
 import androidx.lifecycle.LiveData;
@@ -72,13 +73,59 @@ public class PhonebookRepository {
     }
 
     public void sync() {
-        sync(contactDao);
+        int requests = 0;
+        if (preferences.contains(LAST_SYNC_ID)) {
+            long lastSyncId = preferences.getLong(LAST_SYNC_ID, 0);
+            Set<String> deletedIds = preferences.getStringSet(DELETED_IDS, new HashSet<>());
+            Set<String> changedIds = preferences.getStringSet(CHANGED_IDS, new HashSet<>());
+            if (deletedIds == null) {
+                deletedIds = new HashSet<>();
+            }
+            if (changedIds == null) {
+                changedIds = new HashSet<>();
+            }
+            if (changedIds.removeAll(deletedIds)) {
+                preferences.getStringSet(CHANGED_IDS, changedIds);
+            }
+            requests = deletedIds.size() + changedIds.size();
+            onlineMode = true;
+            onFailure = message -> {
+                postSyncMessage(message);
+                setOnlineMode(false);
+            };
+
+            for (String s : deletedIds) {
+                long id = Long.parseLong(s);
+                if (id > lastSyncId) {
+                    removeFromBacklog(DELETED_IDS, id);
+                    requests--;
+                } else {
+                    deleteRemote(id);
+                }
+                if (!onlineMode) {
+                    return;
+                }
+            }
+
+            for (String s : changedIds) {
+                long id = Long.parseLong(s);
+                if (id > lastSyncId) {
+                    AsyncTask.execute(() -> insertRemote(contactDao.select(id)));
+                } else {
+                    AsyncTask.execute(() -> updateRemote(contactDao.select(id)));
+                }
+                if (!onlineMode) {
+                    return;
+                }
+            }
+        }
+
+        new Handler().postDelayed(() -> sync(contactDao), 500 + requests * 100);
     }
 
     private void sync(ContactDao dao) {
         Consumer<List<Contact>> onSuccess = list -> {
             AsyncTask.execute(() -> {
-                // TODO: push offline changes
                 preferences.edit().remove(DELETED_IDS).remove(CHANGED_IDS).apply();
 
                 dao.replaceAll(list);
@@ -89,13 +136,16 @@ public class PhonebookRepository {
             });
             postSyncMessage(null);
         };
-        onFailure = this::postSyncMessage;
+        onFailure = message -> {
+            postSyncMessage(message);
+            setOnlineMode(false);
+        };
         remote.all(onSuccess);
     }
 
     /**
-     * Saves changes made to a new or existing contact. If online mode if active, this method
-     * returns a Runnable to push the changes to the remote database.
+     * Saves changes made to a new or existing contact. If online mode if active, the changes are
+     * also pushed to the remote database.
      * @param contact The contact to be saved
      */
     public void save(Contact contact) {
@@ -125,19 +175,23 @@ public class PhonebookRepository {
     }
 
     private void insertRemote(Contact contact) {
-        if (!onlineMode || !backlogContains(CHANGED_IDS, oldContact.getId())) {
+        if (!onlineMode || !backlogContains(CHANGED_IDS, contact.getId())) {
             onlineMode = false;
             return;
         }
 
         long id = contact.getId();
         Consumer<Contact> onSuccess = response -> {
-            onFailure = null;
+            setOnlineMode(true);
+            removeFromBacklog(CHANGED_IDS, id);
 
             AsyncTask.execute(() -> {
+                if (contactDao.select(response.getId()) != null) {
+                    // ID already in use, we'll get this contact back when sync completes
+                    contactDao.delete(contact);
+                    return;
+                }
                 contactDao.updateId(id, response.getId());
-                preferences.edit().remove(LAST_SYNC_ID).apply();
-                removeFromBacklog(CHANGED_IDS, id);
 
                 // notify others of updated id
                 oldContact.setId(response.getId());
@@ -174,13 +228,12 @@ public class PhonebookRepository {
     }
 
     private void updateRemote(Contact contact) {
-        if (!onlineMode || !backlogContains(CHANGED_IDS, oldContact.getId())) {
+        if (!onlineMode || !backlogContains(CHANGED_IDS, contact.getId())) {
             return;
         }
 
         Runnable onSuccess = () -> {
-            onFailure = null;
-            preferences.edit().remove(LAST_SYNC_ID).apply();
+            setOnlineMode(true);
             removeFromBacklog(CHANGED_IDS, contact.getId());
         };
         Runnable onNotFound = () -> {
@@ -233,13 +286,12 @@ public class PhonebookRepository {
     }
 
     private void deleteRemote(long id) {
-        if (!onlineMode || !backlogContains(DELETED_IDS, oldContact.getId())) {
+        if (!onlineMode || !backlogContains(DELETED_IDS, id)) {
             return;
         }
 
         Consumer<Contact> onSuccess = contact -> {
-            onFailure = null;
-            preferences.edit().remove(LAST_SYNC_ID).apply();
+            setOnlineMode(true);
             removeFromBacklog(DELETED_IDS, id);
         };
         onFailure = message -> {
@@ -316,6 +368,7 @@ public class PhonebookRepository {
         this.onlineMode = onlineMode;
         if (onlineMode) {
             preferences.edit().remove(LAST_SYNC_ID).apply();
+            onFailure = null;
         } else if (!preferences.contains(LAST_SYNC_ID)) {
             AsyncTask.execute(() -> {
                 long id = contactDao.maxId();

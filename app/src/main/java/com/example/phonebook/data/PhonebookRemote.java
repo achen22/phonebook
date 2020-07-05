@@ -12,6 +12,10 @@ import androidx.annotation.NonNull;
 import androidx.core.util.Consumer;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.phonebook.BuildConfig;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -23,19 +27,25 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class PhonebookRemote {
     private final String TAG = getClass().getSimpleName();
-    private final String BASE_URL = "http://10.0.2.2:5000/api/";
-    private final Retrofit RETROFIT = new Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build();
-    private final ContactEndpoint ENDPOINT = RETROFIT
-            .create(ContactEndpoint.class);
+    private final ContactEndpoint ENDPOINT;
     private static final PhonebookRemote INSTANCE = new PhonebookRemote();
 
     private MutableLiveData<String> message = new MutableLiveData<>();
     private ConnectivityManager connectivityManager;
 
-    private PhonebookRemote() {}
+    private PhonebookRemote() {
+        String BASE_URL = BuildConfig.DEBUG
+                ? "http://10.0.2.2:5000/api/"
+                : "https://achen22.pythonanywhere.com/api/";
+        Gson gson = new GsonBuilder()
+                .setDateFormat("yyyy-MM-dd")
+                .create();
+        Retrofit RETROFIT = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+         ENDPOINT = RETROFIT.create(ContactEndpoint.class);
+    }
 
     public static PhonebookRemote getInstance(Context context) {
         if (INSTANCE.connectivityManager == null) {
@@ -211,7 +221,7 @@ public class PhonebookRemote {
         String prefix = method == null || method.isEmpty()
                 ? ""
                 : method + "().";
-        String msg = String.format("%sonBadResponse: get [%d] %s from %s",
+        String msg = String.format("%sonBadResponse: got [%d] %s from %s",
                 prefix, response.code(), response.message(), response.raw().request().url());
         Log.e(TAG, msg);
         postMessage("Server response error");

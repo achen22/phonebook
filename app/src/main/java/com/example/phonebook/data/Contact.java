@@ -51,6 +51,18 @@ public class Contact implements Comparable<Contact>, Serializable {
                 (dob == contact.dob || dob != null && dob.equals(contact.dob));
     }
 
+    @NonNull
+    @Override
+    public String toString() {
+        return "Contact{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", phone='" + phone + '\'' +
+                ", dob=" + Converters.dateToInt(dob) +
+                '}';
+    }
+
     public long getId() {
         return id;
     }
@@ -64,7 +76,7 @@ public class Contact implements Comparable<Contact>, Serializable {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(@NonNull String name) {
         this.name = name;
     }
 
