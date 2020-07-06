@@ -63,15 +63,14 @@
         app:layout_constraintTop_toBottomOf="@+id/detail_email_icon"
         app:srcCompat="@drawable/ic_phone" />
 
-    <TextView
+    <Button
         android:id="@+id/detail_phone_text"
-        android:layout_width="0dp"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="?attr/listPreferredItemPaddingEnd"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_marginStart="24dp"
+        android:textColor="?attr/colorPrimary"
         app:layout_constraintBottom_toBottomOf="@+id/detail_phone_icon"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/detail_phone_icon"
         app:layout_constraintTop_toTopOf="@+id/detail_phone_icon" />
 

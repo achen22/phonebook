@@ -1,7 +1,10 @@
 package com.example.phonebook.activities;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.lifecycle.LiveData;
@@ -40,9 +43,13 @@ public class DetailActivity extends BaseChildActivity {
                     emailText.setEnabled(false);
                 }
 
-                TextView phoneText = findViewById(R.id.detail_phone_text);
+                Button phoneText = findViewById(R.id.detail_phone_text);
                 if (contact.getPhone() != null) {
                     phoneText.setText(contact.getPhone());
+                    phoneText.setOnClickListener(v -> {
+                        CharSequence phone = ((TextView) v).getText();
+                        callPhone(phone);
+                    });
                 } else {
                     phoneText.setText(R.string.empty_field);
                     phoneText.setEnabled(false);
@@ -61,5 +68,14 @@ public class DetailActivity extends BaseChildActivity {
 
         View btnBack = findViewById(R.id.detail_layout_btn);
         btnBack.setOnClickListener(view -> finish());
+    }
+
+    private void callPhone(CharSequence phone) {
+        if (phone == null || phone.length() == 0) {
+            return;
+        }
+        Intent intent = new Intent(Intent.ACTION_CALL);
+        intent.setData(Uri.parse("tel:" + phone));
+        startActivity(intent);
     }
 }
