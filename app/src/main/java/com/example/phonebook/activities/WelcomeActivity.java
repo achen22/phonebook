@@ -2,6 +2,7 @@ package com.example.phonebook.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -10,6 +11,8 @@ import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.phonebook.R;
+
+import static android.Manifest.permission.CALL_PHONE;
 
 public class WelcomeActivity extends AppCompatActivity {
     public static final String DARK_THEME_KEY = "useDarkTheme";
@@ -81,6 +84,10 @@ public class WelcomeActivity extends AppCompatActivity {
             // Check for right-to-left horizontal (+/- 45 degrees) fling
             if (e1.getX() > e2.getX()
                     && Math.abs(e1.getX() - e2.getX()) > Math.abs(e1.getY() - e2.getY())) {
+                // Request phone call permission
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    requestPermissions(new String[] { CALL_PHONE }, 0);
+                }
                 // Set light theme preference if no theme was chosen
                 if (!preferences.contains(DARK_THEME_KEY)) {
                     preferences.edit()

@@ -1,7 +1,9 @@
 package com.example.phonebook.activities;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -16,6 +18,8 @@ import com.example.phonebook.data.PhonebookRepository;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+
+import static android.Manifest.permission.CALL_PHONE;
 
 public class DetailActivity extends BaseChildActivity {
     private final String TAG = this.getClass().getSimpleName();
@@ -75,6 +79,10 @@ public class DetailActivity extends BaseChildActivity {
             return;
         }
         Intent intent = new Intent(Intent.ACTION_CALL);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                || checkSelfPermission(CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+            intent.setAction(Intent.ACTION_CALL);
+        }
         intent.setData(Uri.parse("tel:" + phone));
         startActivity(intent);
     }
